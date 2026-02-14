@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
     Box,
     Container,
@@ -7,7 +7,8 @@ import {
     Paper,
     Avatar,
     Button,
-    alpha
+    alpha,
+    CircularProgress
 } from '@mui/material';
 import {
     ArrowForward,
@@ -20,26 +21,52 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuthStore } from '../store/useAuthStore';
-
-// Mock Data (Enhanced for UI)
-const newMatches = [
-    { id: 1, name: 'Priya Sharma', age: 26, location: 'Mumbai', profession: 'Software Engineer', image: 'https://i.pravatar.cc/300?img=45', matchScore: 95 },
-    { id: 2, name: 'Anjali Gupta', age: 25, location: 'Delhi', profession: 'Doctor', image: 'https://i.pravatar.cc/300?img=47', matchScore: 92 },
-    { id: 3, name: 'Sneha Patel', age: 27, location: 'Ahmedabad', profession: 'Architect', image: 'https://i.pravatar.cc/300?img=48', matchScore: 88 },
-    { id: 4, name: 'Riya Singh', age: 24, location: 'Bangalore', profession: 'Data Scientist', image: 'https://i.pravatar.cc/300?img=49', matchScore: 85 },
-];
-
-const stats = [
-    { label: 'Profile Views', value: 128, icon: <Visibility />, color: '#4CAF50' },
-    { label: 'Interests Sent', value: 45, icon: <Favorite />, color: '#E91E63' },
-    { label: 'Connections', value: 12, icon: <Chat />, color: '#2196F3' },
-    { label: 'Shortlisted', value: 8, icon: <Star />, color: '#FFC107' },
-];
+import api from '../hooks/api';
+import { useSocket } from '../hooks/useSocket';
+import { useNotificationStore } from '../store/useNotificationStore';
 
 const Dashboard: React.FC = () => {
     const navigate = useNavigate();
     const { user } = useAuthStore();
+    const [dashboardData, setDashboardData] = React.useState<any>(null);
+    const [loading, setLoading] = React.useState(true);
+    const { showToast } = useNotificationStore();
+
     const mainColor = '#B88E2F'; // Gold/Premium
+
+    const fetchDashboardData = React.useCallback(async () => {
+        try {
+            const response = await api.get('/user/dashboard');
+            setDashboardData(response.data.data);
+        } catch (error) {
+            console.error('Failed to fetch dashboard data', error);
+        } finally {
+            setLoading(false);
+        }
+    }, []);
+
+    useEffect(() => {
+        fetchDashboardData();
+    }, [fetchDashboardData]);
+
+    useSocket((notification) => {
+        showToast(
+            notification.data.message || 'New update received!',
+            'info'
+        );
+        // Refresh data on notification
+        fetchDashboardData();
+    });
+
+    if (loading || !dashboardData) {
+        return (
+            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}>
+                <CircularProgress sx={{ color: mainColor }} />
+            </Box>
+        );
+    }
+
+    const { newMatches, stats, recentInterests, membership } = dashboardData;
 
     const containerVariants = {
         hidden: { opacity: 0 },
@@ -61,6 +88,7 @@ const Dashboard: React.FC = () => {
 
     return (
         <Box sx={{ minHeight: '100vh', bgcolor: '#FAFAFA', pb: 8 }}>
+
             {/* Welcome Banner */}
             <Box
                 sx={{
@@ -79,7 +107,7 @@ const Dashboard: React.FC = () => {
                                 Welcome back, {user?.fullName?.firstName || 'User'}!
                             </Typography>
                             <Typography variant="body1" color="text.secondary">
-                                You have <Box component="span" sx={{ color: mainColor, fontWeight: 700 }}>12 new matches</Box> waiting for you today.
+                                You have <Box component="span" sx={{ color: mainColor, fontWeight: 700 }}>{newMatches.length} new matches</Box> waiting for you today.
                             </Typography>
                         </Grid>
                         <Grid size={{ xs: 12, md: 4 }} sx={{ display: 'flex', justifyContent: { md: 'flex-end' } }}>
@@ -109,7 +137,7 @@ const Dashboard: React.FC = () => {
 
                     {/* Stats Section */}
                     <Grid container spacing={3} sx={{ mb: 6 }}>
-                        {stats.map((stat, index) => (
+                        {stats.map((stat: any, index: number) => (
                             <Grid size={{ xs: 6, md: 3 }} key={index}>
                                 <Paper
                                     elevation={0}
@@ -135,12 +163,15 @@ const Dashboard: React.FC = () => {
                                         sx={{
                                             p: 1.5,
                                             borderRadius: '50%',
-                                            bgcolor: alpha(stat.color, 0.1),
-                                            color: stat.color,
+                                            bgcolor: alpha(stat.color || '#B88E2F', 0.1),
+                                            color: stat.color || '#B88E2F',
                                             display: 'flex'
                                         }}
                                     >
-                                        {stat.icon}
+                                        {stat.icon === 'Visibility' && <Visibility />}
+                                        {stat.icon === 'Favorite' && <Favorite />}
+                                        {stat.icon === 'Chat' && <Chat />}
+                                        {stat.icon === 'Star' && <Star />}
                                     </Box>
                                     <Box>
                                         <Typography variant="h4" sx={{ fontWeight: 800, color: '#333' }}>
@@ -171,7 +202,7 @@ const Dashboard: React.FC = () => {
                         </Box>
 
                         <Grid container spacing={3}>
-                            {newMatches.map((profile) => (
+                            {newMatches.map((profile: any) => (
                                 <Grid size={{ xs: 12, sm: 6, md: 3 }} key={profile.id}>
                                     <Paper
                                         elevation={0}
@@ -283,27 +314,27 @@ const Dashboard: React.FC = () => {
                                 <Typography variant="h6" sx={{ fontWeight: 700, mb: 3, fontFamily: '"Cinzel", serif' }}>
                                     Recent Interest Requests
                                 </Typography>
-                                {[1, 2, 3].map((item) => (
+                                {recentInterests.length > 0 ? recentInterests.map((item: any) => (
                                     <Box
-                                        key={item}
+                                        key={item.id}
                                         sx={{
                                             display: 'flex',
                                             alignItems: 'center',
                                             justifyContent: 'space-between',
                                             mb: 2,
                                             pb: 2,
-                                            borderBottom: item !== 3 ? '1px solid' : 'none',
+                                            borderBottom: '1px solid',
                                             borderColor: 'divider'
                                         }}
                                     >
                                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                                            <Avatar src={`https://i.pravatar.cc/150?img=${item + 10}`} sx={{ width: 50, height: 50 }} />
+                                            <Avatar src={item.image} sx={{ width: 50, height: 50 }} />
                                             <Box>
                                                 <Typography variant="subtitle1" fontWeight={700}>
-                                                    New Person {item}
+                                                    {item.name}
                                                 </Typography>
                                                 <Typography variant="caption" color="text.secondary">
-                                                    Software Developer • 26 Yrs
+                                                    {item.profession} • {item.age} Yrs
                                                 </Typography>
                                             </Box>
                                         </Box>
@@ -316,7 +347,11 @@ const Dashboard: React.FC = () => {
                                             </Button>
                                         </Box>
                                     </Box>
-                                ))}
+                                )) : (
+                                    <Typography variant="body2" color="text.secondary" textAlign="center" py={4}>
+                                        No recent interests received.
+                                    </Typography>
+                                )}
                             </Paper>
                         </Grid>
                         <Grid size={{ xs: 12, md: 4 }}>
@@ -334,19 +369,21 @@ const Dashboard: React.FC = () => {
                             >
                                 <Box sx={{ position: 'relative', zIndex: 1 }}>
                                     <Typography variant="h6" fontWeight={700} sx={{ mb: 1, fontFamily: '"Cinzel", serif' }}>
-                                        Premium Plan
+                                        {membership.tier} Plan
                                     </Typography>
                                     <Typography variant="body2" sx={{ opacity: 0.8, mb: 4 }}>
-                                        Your premium membership expires in 12 days. Renew now to keep accessing exclusive features.
+                                        {membership.daysLeft > 0
+                                            ? `Your premium membership expires in ${membership.daysLeft} days. Renew now to keep accessing exclusive features.`
+                                            : 'Upgrade your plan to unlock premium features and find your perfect match faster.'}
                                     </Typography>
 
                                     <Box sx={{ mb: 4 }}>
                                         <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
                                             <Typography variant="caption" fontWeight={700}>DAYS LEFT</Typography>
-                                            <Typography variant="caption" fontWeight={700}>12 / 30</Typography>
+                                            <Typography variant="caption" fontWeight={700}>{membership.daysLeft} / 30</Typography>
                                         </Box>
                                         <Box sx={{ height: 6, bgcolor: 'rgba(255,255,255,0.1)', borderRadius: 4 }}>
-                                            <Box sx={{ height: '100%', width: '40%', bgcolor: mainColor, borderRadius: 4 }} />
+                                            <Box sx={{ height: '100%', width: `${(membership.daysLeft / 30) * 100}%`, bgcolor: mainColor, borderRadius: 4 }} />
                                         </Box>
                                     </Box>
 
@@ -362,7 +399,7 @@ const Dashboard: React.FC = () => {
                                         }}
                                         onClick={() => navigate('/membership')}
                                     >
-                                        Renew Now
+                                        {membership.tier === 'Basic' ? 'Upgrade now' : 'Renew Now'}
                                     </Button>
                                 </Box>
 

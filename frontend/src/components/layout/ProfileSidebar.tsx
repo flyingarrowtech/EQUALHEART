@@ -12,19 +12,24 @@ import {
     ListItem,
     ListItemButton,
     ListItemText,
-    ListItemAvatar
+    ListItemAvatar,
+    alpha
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import FacebookIcon from '@mui/icons-material/Facebook';
 import TwitterIcon from '@mui/icons-material/Twitter';
 import WhatsAppIcon from '@mui/icons-material/WhatsApp';
 import LinkedInIcon from '@mui/icons-material/LinkedIn';
-import YouTubeIcon from '@mui/icons-material/YouTube';
 import InstagramIcon from '@mui/icons-material/Instagram';
 import StarIcon from '@mui/icons-material/Star';
 import VisibilityIcon from '@mui/icons-material/Visibility';
+import PersonIcon from '@mui/icons-material/Person';
+import SettingsIcon from '@mui/icons-material/Settings';
+import SecurityIcon from '@mui/icons-material/Security';
+import LogoutIcon from '@mui/icons-material/Logout';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/useAuthStore';
+import { motion } from 'framer-motion';
 
 interface ProfileSidebarProps {
     open: boolean;
@@ -36,7 +41,6 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({ open, onClose }) => {
     const { logout, user } = useAuthStore();
 
     const handleNavigation = (path: string) => {
-        // If path is generic /profile and we have a user, properly route to public profile
         if (path === '/profile' && user) {
             navigate(`/profile/${user.id || (user as any)._id}`);
         } else {
@@ -57,241 +61,216 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({ open, onClose }) => {
             open={open}
             onClose={onClose}
             PaperProps={{
-                sx: { width: { xs: '100%', sm: 400 }, p: 3 }
+                sx: {
+                    width: { xs: '100%', sm: 400 },
+                    bgcolor: 'background.glassSidebar',
+                    backdropFilter: 'blur(20px)',
+                    borderLeft: 1,
+                    borderColor: 'background.glassBorder',
+                    p: 3,
+                    display: 'flex',
+                    flexDirection: 'column'
+                }
             }}
         >
             {/* Header / Close Button */}
-            <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
-                <IconButton onClick={onClose} sx={{ color: '#e91e63' }}>
-                    <CloseIcon fontSize="large" />
+            <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 1 }}>
+                <IconButton
+                    onClick={onClose}
+                    sx={{
+                        color: 'primary.main',
+                        bgcolor: (theme) => alpha(theme.palette.primary.main, 0.05),
+                        '&:hover': { bgcolor: (theme) => alpha(theme.palette.primary.main, 0.1) }
+                    }}
+                >
+                    <CloseIcon />
                 </IconButton>
             </Box>
 
-            {/* Support Team Section */}
-            <Box sx={{ textAlign: 'center', mb: 4 }}>
-                <Typography variant="overline" color="text.secondary" fontWeight="bold" letterSpacing={1}>
-                    SUPPORT TEAM
-                </Typography>
+            {/* Profile Header Section */}
+            <Box sx={{ textAlign: 'center', mb: 4, px: 2 }}>
+                <Box sx={{ position: 'relative', display: 'inline-block', mb: 3 }}>
+                    <motion.div
+                        whileHover={{ scale: 1.05 }}
+                        transition={{ type: "spring", stiffness: 300 }}
+                    >
+                        <Avatar
+                            src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=400&q=80"
+                            sx={{
+                                width: 120,
+                                height: 120,
+                                mx: 'auto',
+                                border: '4px solid white',
+                                boxShadow: '0 12px 32px rgba(0,0,0,0.15)'
+                            }}
+                        />
+                    </motion.div>
 
-                <Box sx={{ position: 'relative', display: 'inline-block', mt: 2, mb: 1 }}>
-                    <Avatar
-                        src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=400&q=80"
-                        sx={{ width: 120, height: 120, mx: 'auto', border: '4px solid white', boxShadow: '0 8px 16px rgba(0,0,0,0.1)' }}
-                    />
-                    <Box
-                        sx={{
-                            position: 'absolute',
-                            top: 0,
-                            left: -20,
-                            width: 0,
-                            height: 0,
-                            borderLeft: '15px solid transparent',
-                            borderRight: '15px solid transparent',
-                            borderBottom: '25px solid #00e676', // Green triangle styling
-                            transform: 'rotate(-45deg)'
-                        }}
-                    />
+                    {/* Decorative Glass Badge */}
                     <Box
                         sx={{
                             position: 'absolute',
                             bottom: -10,
-                            right: -30,
-                            width: 60,
-                            height: 60,
-                            borderRadius: '50%',
-                            bgcolor: '#ffeb3b', // Yellow circle styling
-                            zIndex: -1
+                            left: '50%',
+                            transform: 'translateX(-50%)',
+                            bgcolor: 'primary.main',
+                            background: (theme) => `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
+                            color: 'white',
+                            px: 2,
+                            py: 0.5,
+                            borderRadius: 100,
+                            boxShadow: '0 4px 12px rgba(233,30,99,0.3)',
                         }}
-                    />
+                    >
+                        <Typography variant="caption" sx={{ fontWeight: 900, letterSpacing: 1.5 }}>
+                            ADVISOR
+                        </Typography>
+                    </Box>
                 </Box>
 
-                <Typography variant="h5" fontWeight="bold" sx={{ mt: 2, color: '#333' }}>
+                <Typography variant="h5" fontWeight={900} sx={{ color: 'text.primary', fontFamily: '"Outfit", sans-serif', mb: 0.5 }}>
                     Ashley emyy
                 </Typography>
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                    Senior personal advisor
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 3, fontWeight: 600, opacity: 0.8 }}>
+                    Senior Personal Advisor
                 </Typography>
 
                 <Button
                     variant="contained"
+                    fullWidth
                     sx={{
-                        bgcolor: '#546e7a',
+                        background: (theme) => `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`,
                         color: 'white',
                         textTransform: 'none',
                         px: 4,
-                        py: 1,
-                        borderRadius: 1,
+                        py: 1.5,
+                        borderRadius: 100,
                         mb: 3,
-                        '&:hover': { bgcolor: '#455a64' }
+                        fontWeight: 700,
+                        boxShadow: '0 8px 16px rgba(233, 30, 99, 0.2)',
+                        '&:hover': {
+                            boxShadow: '0 12px 24px rgba(233, 30, 99, 0.3)',
+                        }
                     }}
                 >
-                    Ask your doubts
+                    Contact Support
                 </Button>
 
-                <Stack direction="row" spacing={1} justifyContent="center">
-                    {[FacebookIcon, TwitterIcon, WhatsAppIcon, LinkedInIcon, YouTubeIcon, InstagramIcon].map((Icon, idx) => (
-                        <IconButton key={idx} size="small" sx={{ bgcolor: '#f5f5f5', '&:hover': { bgcolor: '#e0e0e0' } }}>
-                            <Icon fontSize="small" sx={{ color: '#555' }} />
+                <Stack direction="row" spacing={1.5} justifyContent="center">
+                    {[FacebookIcon, TwitterIcon, WhatsAppIcon, LinkedInIcon, InstagramIcon].map((Icon, idx) => (
+                        <IconButton
+                            key={idx}
+                            size="small"
+                            sx={{
+                                bgcolor: (theme) => alpha(theme.palette.primary.main, 0.05),
+                                color: 'primary.main',
+                                transition: 'all 0.2s',
+                                '&:hover': {
+                                    bgcolor: 'primary.main',
+                                    color: 'white',
+                                    transform: 'translateY(-3px)'
+                                }
+                            }}
+                        >
+                            <Icon fontSize="small" />
                         </IconButton>
                     ))}
                 </Stack>
             </Box>
 
-            <Divider sx={{ my: 2 }} />
+            <Divider sx={{ my: 2, borderColor: 'background.glassBorder' }} />
 
-            {/* Activity Section */}
-            <Box sx={{ mb: 3 }}>
-                <Typography variant="overline" color="text.secondary" fontWeight="bold" letterSpacing={1}>
-                    ACTIVITY
-                </Typography>
-                <List dense>
-                    <ListItem disablePadding>
-                        <ListItemButton onClick={() => handleNavigation('/shortlisted')}>
-                            <ListItemAvatar sx={{ minWidth: 40 }}>
-                                <StarIcon fontSize="small" color="primary" />
-                            </ListItemAvatar>
-                            <ListItemText primary="Shortlisted" secondary="Users you have saved" />
-                        </ListItemButton>
-                    </ListItem>
-                    <ListItem disablePadding>
-                        <ListItemButton onClick={() => handleNavigation('/visitors')}>
-                            <ListItemAvatar sx={{ minWidth: 40 }}>
-                                <VisibilityIcon fontSize="small" color="primary" />
-                            </ListItemAvatar>
-                            <ListItemText primary="Profile Visitors" secondary="People who viewed you" />
-                        </ListItemButton>
-                    </ListItem>
-                </List>
-            </Box>
-
-            <Divider sx={{ my: 2 }} />
-
-            {/* Quick Actions (Preserving Dropdown Functionality) */}
-            <Box sx={{ mb: 3 }}>
-                <Typography variant="overline" color="text.secondary" fontWeight="bold" letterSpacing={1}>
-                    MY ACCOUNT
-                </Typography>
-                <List dense>
-                    <ListItem disablePadding>
-                        <ListItemButton onClick={() => handleNavigation('/profile')}>
-                            <ListItemText primary="View Profile" secondary="See how others view your profile" />
-                        </ListItemButton>
-                    </ListItem>
-                    <ListItem disablePadding>
-                        <ListItemButton onClick={() => handleNavigation('/profile/edit')}>
-                            <ListItemText primary="Edit Profile" secondary="Update your information" />
-                        </ListItemButton>
-                    </ListItem>
-                    <ListItem disablePadding>
-                        <ListItemButton onClick={() => handleNavigation('/profile/privacy')}>
-                            <ListItemText primary="Privacy Settings" secondary="Manage visibility & blocking" />
-                        </ListItemButton>
-                    </ListItem>
-                    <ListItem disablePadding>
-                        <ListItemButton onClick={handleLogout}>
-                            <ListItemText primary="Logout" sx={{ color: 'error.main' }} />
-                        </ListItemButton>
-                    </ListItem>
-                </List>
-            </Box>
-
-            <Divider sx={{ my: 2 }} />
-
-            {/* Latest News Section */}
-            <Box sx={{ mb: 4 }}>
-                <Typography variant="overline" color="text.secondary" fontWeight="bold" letterSpacing={1}>
-                    LATEST NEWS
-                </Typography>
-                <List>
-                    {[
-                        {
-                            title: 'Long established fact that a reader distracted',
-                            date: '12 Dec 2023',
-                            image: 'https://images.unsplash.com/photo-1515934751635-c81c6bc9a2d8?w=200'
-                        },
-                        {
-                            title: 'Long established fact that a reader distracted',
-                            date: '12 Dec 2023',
-                            image: 'https://images.unsplash.com/photo-1511285560929-80b456fea0bc?w=200'
-                        },
-                        {
-                            title: 'Long established fact that a reader distracted',
-                            date: '12 Dec 2023',
-                            image: 'https://images.unsplash.com/photo-1519741497674-611481863552?w=200'
-                        }
-                    ].map((news, idx) => (
-                        <ListItem key={idx} alignItems="flex-start" sx={{ px: 0 }}>
-                            <ListItemAvatar>
-                                <Avatar variant="square" src={news.image} sx={{ width: 60, height: 60, borderRadius: 2, mr: 2 }} />
-                            </ListItemAvatar>
-                            <ListItemText
-                                primary={
-                                    <Typography variant="subtitle2" fontWeight="bold" lineHeight={1.3} mb={0.5}>
-                                        {news.title}
-                                    </Typography>
-                                }
-                                secondary={
-                                    <Box component="span" sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                                        <Typography component="span" variant="caption" color="text.secondary">
-                                            &gt; {news.date}
-                                        </Typography>
-                                    </Box>
-                                }
-                            />
+            {/* Scrollable Content Area */}
+            <Box sx={{ flexGrow: 1, overflowY: 'auto', px: 1 }}>
+                {/* Activity Section */}
+                <Box sx={{ mb: 3, mt: 2 }}>
+                    <Typography variant="overline" color="text.secondary" fontWeight={900} sx={{ letterSpacing: 2, px: 2 }}>
+                        ACTIVITY
+                    </Typography>
+                    <List dense>
+                        <ListItem disablePadding>
+                            <ListItemButton onClick={() => handleNavigation('/shortlisted')} sx={{ borderRadius: 2, mx: 1 }}>
+                                <ListItemAvatar sx={{ minWidth: 45 }}>
+                                    <Avatar sx={{ bgcolor: alpha('#ff9800', 0.1), color: '#ff9800', width: 32, height: 32 }}>
+                                        <StarIcon fontSize="small" />
+                                    </Avatar>
+                                </ListItemAvatar>
+                                <ListItemText
+                                    primary="Shortlisted"
+                                    secondary="Users you've saved"
+                                    primaryTypographyProps={{ fontWeight: 700 }}
+                                />
+                            </ListItemButton>
                         </ListItem>
-                    ))}
-                </List>
+                        <ListItem disablePadding>
+                            <ListItemButton onClick={() => handleNavigation('/visitors')} sx={{ borderRadius: 2, mx: 1 }}>
+                                <ListItemAvatar sx={{ minWidth: 45 }}>
+                                    <Avatar sx={{ bgcolor: alpha('#2196f3', 0.1), color: '#2196f3', width: 32, height: 32 }}>
+                                        <VisibilityIcon fontSize="small" />
+                                    </Avatar>
+                                </ListItemAvatar>
+                                <ListItemText
+                                    primary="Profile Visitors"
+                                    secondary="People who viewed you"
+                                    primaryTypographyProps={{ fontWeight: 700 }}
+                                />
+                            </ListItemButton>
+                        </ListItem>
+                    </List>
+                </Box>
+
+                {/* Account Section */}
+                <Box sx={{ mb: 3 }}>
+                    <Typography variant="overline" color="text.secondary" fontWeight={900} sx={{ letterSpacing: 2, px: 2 }}>
+                        MY ACCOUNT
+                    </Typography>
+                    <List dense>
+                        {[
+                            { text: 'View Profile', sub: 'See your public view', icon: <PersonIcon />, path: '/profile' },
+                            { text: 'Edit Profile', sub: 'Update your info', icon: <SettingsIcon />, path: '/profile/edit' },
+                            { text: 'Privacy Settings', sub: 'Manage visibility', icon: <SecurityIcon />, path: '/profile/privacy' },
+                        ].map((item) => (
+                            <ListItem key={item.text} disablePadding>
+                                <ListItemButton onClick={() => handleNavigation(item.path)} sx={{ borderRadius: 2, mx: 1 }}>
+                                    <ListItemAvatar sx={{ minWidth: 45 }}>
+                                        <Avatar sx={{ bgcolor: alpha('#5c6bc0', 0.1), color: '#5c6bc0', width: 32, height: 32 }}>
+                                            {React.cloneElement(item.icon as any, { fontSize: 'small' })}
+                                        </Avatar>
+                                    </ListItemAvatar>
+                                    <ListItemText
+                                        primary={item.text}
+                                        secondary={item.sub}
+                                        primaryTypographyProps={{ fontWeight: 700 }}
+                                    />
+                                </ListItemButton>
+                            </ListItem>
+                        ))}
+                    </List>
+                </Box>
             </Box>
 
-            {/* CTA Section */}
-            <Box
-                sx={{
-                    position: 'relative',
-                    borderRadius: 3,
-                    overflow: 'hidden',
-                    height: 200,
-                    backgroundImage: 'url(https://images.unsplash.com/photo-1515934751635-c81c6bc9a2d8?w=600)',
-                    backgroundSize: 'cover',
-                    backgroundPosition: 'center',
-                    mt: 'auto'
-                }}
-            >
-                <Box
+            <Divider sx={{ my: 2, borderColor: 'background.glassBorder' }} />
+
+            {/* Logout Footer */}
+            <Box sx={{ p: 1 }}>
+                <ListItemButton
+                    onClick={handleLogout}
                     sx={{
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                        bgcolor: 'rgba(0,0,0,0.5)',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        p: 2,
-                        textAlign: 'center'
+                        borderRadius: 3,
+                        bgcolor: (theme) => alpha(theme.palette.error.main, 0.05),
+                        color: 'error.main',
+                        '&:hover': {
+                            bgcolor: (theme) => alpha(theme.palette.error.main, 0.1),
+                        }
                     }}
                 >
-                    <Typography variant="h5" color="white" fontWeight="bold" gutterBottom>
-                        Tell us your Needs
-                    </Typography>
-                    <Typography variant="caption" color="rgba(255,255,255,0.8)" sx={{ mb: 2 }}>
-                        Tell us what kind of service you are looking for.
-                    </Typography>
-                    <Button
-                        variant="contained"
-                        sx={{
-                            bgcolor: '#0d47a1',
-                            borderRadius: 0,
-                            fontWeight: 'bold',
-                            fontSize: '0.75rem',
-                            letterSpacing: 1,
-                            '&:hover': { bgcolor: '#002171' }
-                        }}
-                    >
-                        REGISTER FOR FREE
-                    </Button>
-                </Box>
+                    <ListItemAvatar sx={{ minWidth: 45 }}>
+                        <Avatar sx={{ bgcolor: 'transparent', color: 'error.main', width: 32, height: 32 }}>
+                            <LogoutIcon fontSize="small" />
+                        </Avatar>
+                    </ListItemAvatar>
+                    <ListItemText primary="Sign Out" primaryTypographyProps={{ fontWeight: 900 }} />
+                </ListItemButton>
             </Box>
         </Drawer>
     );

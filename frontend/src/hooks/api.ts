@@ -67,11 +67,12 @@ api.interceptors.response.use(
                     withCredentials: true
                 });
 
-                const { accessToken } = response.data.data;
-                const { user } = useAuthStore.getState();
+                const { accessToken, user } = response.data.data;
 
                 if (user) {
                     setAuth(user, accessToken);
+                } else {
+                    useAuthStore.getState().setToken(accessToken);
                 }
 
                 processQueue(null, accessToken);

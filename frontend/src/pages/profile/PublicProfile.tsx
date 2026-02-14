@@ -48,6 +48,7 @@ import {
     Block,
     Flag,
     MoreVert,
+    LocationOn,
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
 import userApi from '../../api/userApi';
@@ -73,6 +74,7 @@ const PublicProfile: React.FC = () => {
     const [profileViews, setProfileViews] = useState(0);
     const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null);
 
+    
     useEffect(() => {
         const fetchProfile = async () => {
             try {
@@ -164,13 +166,15 @@ const PublicProfile: React.FC = () => {
         });
     };
 
+
+
     if (loading) return <LoadingState type="skeleton-profile" />;
     if (error || !profile) return <ErrorState message={error || 'Profile not found'} />;
 
     const photos =
         profile.photos && profile.photos.length > 0
             ? profile.photos
-            : [{ url: 'https://via.placeholder.com/400?text=No+Photo' }];
+            : [{ url: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=500&auto=format&fit=crop&q=60' }];
 
     const InfoRow = ({
         icon,
@@ -181,13 +185,27 @@ const PublicProfile: React.FC = () => {
         label: string;
         value: any;
     }) => (
-        <Box sx={{ display: 'flex', alignItems: 'flex-start', mb: 2 }}>
-            <Box sx={{ color: 'primary.main', mr: 2, mt: 0.5 }}>{icon}</Box>
+        <Box sx={{ display: 'flex', alignItems: 'flex-start', mb: 2.5 }}>
+            <Box
+                sx={{
+                    color: 'primary.main',
+                    mr: 2,
+                    mt: 0.5,
+                    p: 1,
+                    borderRadius: 2,
+                    bgcolor: (theme) => alpha(theme.palette.primary.main, 0.1),
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                }}
+            >
+                {icon}
+            </Box>
             <Box>
-                <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>
-                    {label}
+                <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, letterSpacing: 0.5 }}>
+                    {label.toUpperCase()}
                 </Typography>
-                <Typography variant="body1" fontWeight={500}>
+                <Typography variant="body1" fontWeight={600} color="text.primary">
                     {value || 'Not Specified'}
                 </Typography>
             </Box>
@@ -195,49 +213,76 @@ const PublicProfile: React.FC = () => {
     );
 
     return (
-        <Box sx={{ bgcolor: '#f5f3f0', minHeight: '100vh', pb: 8 }}>
-            {/* Cover Image & Header */}
+        <Box sx={{ bgcolor: 'background.default', minHeight: '100vh', pb: 8 }}>
+            {/* Premium Cover Header */}
             <Box
+                component={motion.div}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.8 }}
                 sx={{
-                    height: 300,
-                    background: 'linear-gradient(135deg, #e91e63 0%, #9c27b0 100%)',
+                    height: 320,
+                    background: (theme) => `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`,
                     position: 'relative',
+                    overflow: 'hidden'
                 }}
             >
-                <Container maxWidth="lg" sx={{ height: '100%', position: 'relative' }}>
-                    <IconButton
-                        onClick={() => navigate(-1)}
-                        sx={{
-                            position: 'absolute',
-                            top: 24,
-                            left: 24,
-                            color: 'white',
-                            bgcolor: 'rgba(0,0,0,0.2)',
-                            '&:hover': { bgcolor: 'rgba(0,0,0,0.4)' },
-                        }}
-                    >
-                        <ArrowBack />
-                    </IconButton>
-                    <IconButton
-                        onClick={(e) => setMenuAnchor(e.currentTarget)}
-                        sx={{
-                            position: 'absolute',
-                            top: 24,
-                            right: 24,
-                            color: 'white',
-                            bgcolor: 'rgba(0,0,0,0.2)',
-                            '&:hover': { bgcolor: 'rgba(0,0,0,0.4)' },
-                        }}
-                    >
-                        <MoreVert />
-                    </IconButton>
+                {/* Decorative Circles */}
+                <Box
+                    sx={{
+                        position: 'absolute',
+                        top: -100,
+                        right: -50,
+                        width: 400,
+                        height: 400,
+                        borderRadius: '50%',
+                        background: 'radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%)',
+                    }}
+                />
+                <Box
+                    sx={{
+                        position: 'absolute',
+                        bottom: -50,
+                        left: -50,
+                        width: 300,
+                        height: 300,
+                        borderRadius: '50%',
+                        background: 'radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%)',
+                    }}
+                />
+
+                <Container maxWidth="lg" sx={{ height: '100%', position: 'relative', zIndex: 2 }}>
+                    <Box sx={{ pt: 3, display: 'flex', justifyContent: 'space-between' }}>
+                        <IconButton
+                            onClick={() => navigate(-1)}
+                            sx={{
+                                color: 'white',
+                                bgcolor: 'rgba(255,255,255,0.15)',
+                                backdropFilter: 'blur(5px)',
+                                '&:hover': { bgcolor: 'rgba(255,255,255,0.25)' },
+                            }}
+                        >
+                            <ArrowBack />
+                        </IconButton>
+                        <IconButton
+                            onClick={(e) => setMenuAnchor(e.currentTarget)}
+                            sx={{
+                                color: 'white',
+                                bgcolor: 'rgba(255,255,255,0.15)',
+                                backdropFilter: 'blur(5px)',
+                                '&:hover': { bgcolor: 'rgba(255,255,255,0.25)' },
+                            }}
+                        >
+                            <MoreVert />
+                        </IconButton>
+                    </Box>
                 </Container>
             </Box>
 
-            <Container maxWidth="lg" sx={{ mt: -16, position: 'relative', zIndex: 1 }}>
+            <Container maxWidth="lg" sx={{ mt: -16, position: 'relative', zIndex: 3 }}>
                 <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
                     {/* Left Column: Photos & Actions */}
-                    <Box sx={{ width: { xs: '100%', md: 'calc(33.333% - 22px)' } }}>
+                    <Box sx={{ width: { xs: '100%', md: 'calc(35% - 16px)' } }}>
                         <Paper
                             component={motion.div}
                             initial={{ y: 50, opacity: 0 }}
@@ -248,14 +293,18 @@ const PublicProfile: React.FC = () => {
                                 p: 2,
                                 borderRadius: 4,
                                 overflow: 'hidden',
-                                bgcolor: 'white',
+                                bgcolor: 'background.glassCard',
+                                backdropFilter: 'blur(20px)',
+                                border: 1,
+                                borderColor: 'background.glassBorder',
+                                boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.15)',
                             }}
                         >
                             <Box sx={{ position: 'relative', borderRadius: 4, overflow: 'hidden', mb: 2 }}>
                                 <img
-                                    src={`${import.meta.env.VITE_API_URL}${photos[0].url}`}
+                                    src={`${photos[0].url}`}
                                     alt="Main Profile"
-                                    style={{ width: '100%', height: 400, objectFit: 'cover' }}
+                                    style={{ width: '100%', height: 450, objectFit: 'cover' }}
                                 />
 
                                 {/* Match Score Overlay */}
@@ -264,15 +313,15 @@ const PublicProfile: React.FC = () => {
                                         position: 'absolute',
                                         top: 16,
                                         right: 16,
-                                        bgcolor: 'rgba(255,255,255,0.9)',
-                                        backdropFilter: 'blur(4px)',
+                                        bgcolor: 'rgba(255,255,255,0.95)',
+                                        backdropFilter: 'blur(10px)',
                                         borderRadius: 3,
                                         px: 1.5,
                                         py: 0.5,
                                         display: 'flex',
                                         alignItems: 'center',
                                         gap: 0.5,
-                                        boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                                        boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
                                     }}
                                 >
                                     <Box
@@ -281,6 +330,7 @@ const PublicProfile: React.FC = () => {
                                             height: 8,
                                             borderRadius: '50%',
                                             bgcolor: '#4caf50',
+                                            boxShadow: '0 0 8px #4caf50'
                                         }}
                                     />
                                     <Typography variant="subtitle2" fontWeight={800} color="primary.main">
@@ -295,7 +345,7 @@ const PublicProfile: React.FC = () => {
                                     {photos.slice(1).map((item: any, index: number) => (
                                         <ImageListItem key={index}>
                                             <img
-                                                src={`${import.meta.env.VITE_API_URL}${item.url}`}
+                                                src={`${item.url}`}
                                                 alt={`Photo ${index + 1}`}
                                                 style={{ borderRadius: 8, height: 70, objectFit: 'cover', cursor: 'pointer' }}
                                             />
@@ -319,21 +369,31 @@ const PublicProfile: React.FC = () => {
                                             py: 1.5,
                                             borderRadius: 3,
                                             fontWeight: 700,
-                                            background: interestSent ? undefined : 'linear-gradient(135deg, #e91e63 0%, #9c27b0 100%)',
-                                            boxShadow: interestSent ? undefined : '0 4px 12px rgba(233, 30, 99, 0.3)',
+                                            background: interestSent ? undefined : (theme) => `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`,
+                                            boxShadow: interestSent ? undefined : '0 8px 20px rgba(233, 30, 99, 0.4)',
+                                            '&:hover': {
+                                                background: interestSent ? undefined : (theme) => `linear-gradient(135deg, ${theme.palette.primary.dark} 0%, ${theme.palette.secondary.dark} 100%)`,
+                                            }
                                         }}
                                     >
                                         {interestSent ? 'Interest Sent' : 'Send Interest'}
                                     </Button>
                                     <Tooltip title={isShortlisted ? 'Remove from Shortlist' : 'Shortlist Profile'}>
-                                        <Button
-                                            variant="outlined"
-                                            color={isShortlisted ? 'warning' : 'primary'}
+                                        <IconButton
                                             onClick={handleToggleShortlist}
-                                            sx={{ borderRadius: 3, minWidth: 60, borderColor: isShortlisted ? '#ff9800' : '#e0e0e0' }}
+                                            sx={{
+                                                borderRadius: 3,
+                                                border: 1,
+                                                borderColor: isShortlisted ? '#ff9800' : 'divider',
+                                                bgcolor: isShortlisted ? alpha('#ff9800', 0.1) : 'transparent',
+                                                '&:hover': {
+                                                    bgcolor: isShortlisted ? alpha('#ff9800', 0.2) : alpha(theme.palette.primary.main, 0.05),
+                                                    borderColor: isShortlisted ? '#ff9800' : 'primary.main'
+                                                }
+                                            }}
                                         >
-                                            {isShortlisted ? <Star sx={{ color: '#ff9800' }} /> : <StarBorder />}
-                                        </Button>
+                                            {isShortlisted ? <Star sx={{ color: '#ff9800' }} /> : <StarBorder sx={{ color: 'text.secondary' }} />}
+                                        </IconButton>
                                     </Tooltip>
                                 </Box>
 
@@ -349,17 +409,21 @@ const PublicProfile: React.FC = () => {
                                         fontWeight: 700,
                                         borderColor: 'primary.main',
                                         borderWidth: 2,
-                                        '&:hover': { borderWidth: 2 },
+                                        color: 'primary.main',
+                                        '&:hover': {
+                                            borderWidth: 2,
+                                            bgcolor: (theme) => alpha(theme.palette.primary.main, 0.05)
+                                        },
                                     }}
                                 >
-                                    View Contact
+                                    View Contact Details
                                 </Button>
                             </Stack>
                         </Paper>
                     </Box>
 
                     {/* Right Column: Info */}
-                    <Box sx={{ width: { xs: '100%', md: 'calc(66.666% - 10px)' } }}>
+                    <Box sx={{ width: { xs: '100%', md: 'calc(65% - 16px)' } }}>
                         <Paper
                             component={motion.div}
                             initial={{ y: 50, opacity: 0 }}
@@ -370,35 +434,51 @@ const PublicProfile: React.FC = () => {
                                 p: { xs: 3, md: 5 },
                                 borderRadius: 4,
                                 width: '100%',
-                                bgcolor: 'white',
-                                border: '1px solid',
-                                borderColor: 'divider',
+                                bgcolor: 'background.glassCard',
+                                backdropFilter: 'blur(20px)',
+                                border: 1,
+                                borderColor: 'background.glassBorder',
+                                boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.05)',
                             }}
                         >
                             {/* Header Info */}
                             <Box sx={{ mb: 4 }}>
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1, flexWrap: 'wrap' }}>
-                                    <Typography variant="h3" fontWeight={800}>
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1, flexWrap: 'wrap' }}>
+                                    <Typography variant="h3" fontWeight={800} color="text.primary">
                                         {profile.fullName?.firstName} {profile.fullName?.lastName}
                                     </Typography>
                                     {profile.isVerified && (
                                         <Tooltip title="Verified Profile">
-                                            <VerifiedUser color="primary" sx={{ fontSize: 28 }} />
+                                            <VerifiedUser color="primary" sx={{ fontSize: 32 }} />
                                         </Tooltip>
                                     )}
                                     {profile.membership?.tier !== 'Basic' && (
                                         <Tooltip title="Premium Member">
-                                            <WorkspacePremium color="secondary" sx={{ fontSize: 28 }} />
+                                            <WorkspacePremium color="secondary" sx={{ fontSize: 32 }} />
                                         </Tooltip>
                                     )}
                                 </Box>
-                                <Typography variant="h6" color="text.secondary" fontWeight={500}>
-                                    {profile.age} years • {profile.city}, {profile.state}, {profile.country}
-                                </Typography>
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+                                    <LocationOn sx={{ color: 'text.secondary', fontSize: 20 }} />
+                                    <Typography variant="h6" color="text.secondary" fontWeight={500}>
+                                        {profile.city}, {profile.state}, {profile.country}
+                                    </Typography>
+                                </Box>
 
-                                <Box sx={{ mt: 2, display: 'flex', gap: 1 }}>
-                                    <Chip icon={<Visibility fontSize="small" />} label={`${profileViews} Views`} variant="outlined" size="small" />
-                                    <Chip label={`User ID: ${profile._id?.substring(0, 8).toUpperCase()}`} variant="outlined" size="small" />
+                                <Box sx={{ display: 'flex', gap: 2 }}>
+                                    <Chip
+                                        icon={<Visibility fontSize="small" />}
+                                        label={`${profileViews} Views`}
+                                        variant="outlined"
+                                        size="small"
+                                        sx={{ borderColor: 'divider', borderRadius: 2 }}
+                                    />
+                                    <Chip
+                                        label={`ID: ${profile._id?.substring(0, 8).toUpperCase()}`}
+                                        variant="outlined"
+                                        size="small"
+                                        sx={{ borderColor: 'divider', borderRadius: 2 }}
+                                    />
                                 </Box>
                             </Box>
 
@@ -415,56 +495,64 @@ const PublicProfile: React.FC = () => {
                             </Box>
 
                             {/* Details Grid */}
-                            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 4 }}>
+                            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', lg: '1fr 1fr' }, gap: 6 }}>
                                 <Box>
-                                    <Typography variant="h6" fontWeight={800} gutterBottom sx={{ mb: 3 }}>
+                                    <Typography variant="h6" fontWeight={800} gutterBottom sx={{ mb: 3, display: 'flex', alignItems: 'center', gap: 1 }}>
+                                        <Box component="span" sx={{ width: 4, height: 24, bgcolor: 'secondary.main', borderRadius: 1 }} />
                                         Basic Details
                                     </Typography>
-                                    <InfoRow icon={<Cake />} label="Age" value={`${profile.age} Years`} />
-                                    <InfoRow icon={<Height />} label="Height" value={profile.height ? `${profile.height} cm` : null} />
-                                    <InfoRow icon={<Language />} label="Mother Tongue" value={profile.motherTongue} />
-                                    <InfoRow icon={<Star />} label="Religion" value={profile.religion} />
-                                    <InfoRow icon={<Favorite />} label="Marital Status" value={profile.maritalStatus} />
+                                    <InfoRow icon={<Cake fontSize="small" />} label="Age" value={`${profile.age} Years`} />
+                                    <InfoRow icon={<Height fontSize="small" />} label="Height" value={profile.height ? `${profile.height} cm` : null} />
+                                    <InfoRow icon={<Language fontSize="small" />} label="Mother Tongue" value={profile.motherTongue} />
+                                    <InfoRow icon={<Star fontSize="small" />} label="Religion" value={profile.religion} />
+                                    <InfoRow icon={<Favorite fontSize="small" />} label="Marital Status" value={profile.maritalStatus} />
                                 </Box>
 
                                 <Box>
-                                    <Typography variant="h6" fontWeight={800} gutterBottom sx={{ mb: 3 }}>
+                                    <Typography variant="h6" fontWeight={800} gutterBottom sx={{ mb: 3, display: 'flex', alignItems: 'center', gap: 1 }}>
+                                        <Box component="span" sx={{ width: 4, height: 24, bgcolor: 'secondary.main', borderRadius: 1 }} />
                                         Education & Career
                                     </Typography>
-                                    <InfoRow icon={<School />} label="Education" value={profile.highestEducation} />
-                                    <InfoRow icon={<Work />} label="Occupation" value={profile.occupation} />
-                                    <InfoRow icon={<Work />} label="Company" value={profile.companyName} />
-                                    <InfoRow icon={<Work />} label="Income" value={profile.annualIncome ? `₹${profile.annualIncome.toLocaleString()}` : null} />
+                                    <InfoRow icon={<School fontSize="small" />} label="Education" value={profile.highestEducation} />
+                                    <InfoRow icon={<Work fontSize="small" />} label="Occupation" value={profile.occupation} />
+                                    <InfoRow icon={<Work fontSize="small" />} label="Company" value={profile.companyName} />
+                                    <InfoRow icon={<Work fontSize="small" />} label="Income" value={profile.annualIncome ? `₹${profile.annualIncome.toLocaleString()}` : null} />
                                 </Box>
 
                                 <Box>
-                                    <Typography variant="h6" fontWeight={800} gutterBottom sx={{ mb: 3 }}>
+                                    <Typography variant="h6" fontWeight={800} gutterBottom sx={{ mb: 3, display: 'flex', alignItems: 'center', gap: 1 }}>
+                                        <Box component="span" sx={{ width: 4, height: 24, bgcolor: 'secondary.main', borderRadius: 1 }} />
                                         Lifestyle & Habits
                                     </Typography>
-                                    <InfoRow icon={<LocalBar />} label="Drinking" value={profile.drinking} />
-                                    <InfoRow icon={<SmokeFree />} label="Smoking" value={profile.smoking} />
-                                    <InfoRow icon={<Restaurant />} label="Diet" value={profile.dietaryHabits} />
-                                    <InfoRow icon={<Home />} label="House Plans" value={profile.planToHaveOwnHouse} />
+                                    <InfoRow icon={<LocalBar fontSize="small" />} label="Drinking" value={profile.drinking} />
+                                    <InfoRow icon={<SmokeFree fontSize="small" />} label="Smoking" value={profile.smoking} />
+                                    <InfoRow icon={<Restaurant fontSize="small" />} label="Diet" value={profile.dietaryHabits} />
+                                    <InfoRow icon={<Home fontSize="small" />} label="House Plans" value={profile.planToHaveOwnHouse} />
                                 </Box>
                             </Box>
 
                             {/* Hobbies */}
                             {profile.hobbies && profile.hobbies.length > 0 && (
-                                <Box sx={{ mt: 4 }}>
-                                    <Typography variant="h6" fontWeight={800} gutterBottom sx={{ mb: 2 }}>
+                                <Box sx={{ mt: 5 }}>
+                                    <Typography variant="h6" fontWeight={800} gutterBottom sx={{ mb: 3, display: 'flex', alignItems: 'center', gap: 1 }}>
+                                        <Box component="span" sx={{ width: 4, height: 24, bgcolor: 'secondary.main', borderRadius: 1 }} />
                                         Hobbies & Interests
                                     </Typography>
-                                    <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                                    <Box sx={{ display: 'flex', gap: 1.5, flexWrap: 'wrap' }}>
                                         {profile.hobbies.map((hobby: string) => (
                                             <Chip
                                                 key={hobby}
                                                 label={hobby}
                                                 sx={{
                                                     borderRadius: 2,
-                                                    bgcolor: alpha(theme.palette.primary.main, 0.08),
+                                                    bgcolor: (theme) => alpha(theme.palette.primary.main, 0.08),
                                                     color: 'primary.main',
                                                     fontWeight: 600,
                                                     px: 1,
+                                                    py: 2.5,
+                                                    fontSize: '0.95rem',
+                                                    border: '1px solid',
+                                                    borderColor: (theme) => alpha(theme.palette.primary.main, 0.2)
                                                 }}
                                             />
                                         ))}
@@ -482,69 +570,119 @@ const PublicProfile: React.FC = () => {
                 onClose={() => setContactVisible(false)}
                 maxWidth="xs"
                 fullWidth
-                PaperProps={{ sx: { borderRadius: 4, p: 2 } }}
+                PaperProps={{
+                    sx: {
+                        borderRadius: 4,
+                        p: 2,
+                        bgcolor: 'background.paper',
+                        backgroundImage: 'none'
+                    }
+                }}
             >
-                <DialogTitle sx={{ fontWeight: 800, textAlign: 'center' }}>Contact Information</DialogTitle>
+                <DialogTitle sx={{ fontWeight: 800, textAlign: 'center', pt: 3 }}>Contact Information</DialogTitle>
                 <DialogContent>
-                    <Box sx={{ textAlign: 'center', mb: 3 }}>
+                    <Box sx={{ textAlign: 'center', mb: 4 }}>
                         <Avatar
                             src={`${import.meta.env.VITE_API_URL}${photos[0].url}`}
-                            sx={{ width: 80, height: 80, mx: 'auto', mb: 2 }}
+                            sx={{
+                                width: 100,
+                                height: 100,
+                                mx: 'auto',
+                                mb: 2,
+                                border: 4,
+                                borderColor: 'primary.main'
+                            }}
                         />
-                        <Typography variant="h6" fontWeight={700}>
+                        <Typography variant="h5" fontWeight={800}>
                             {profile.fullName?.firstName} {profile.fullName?.lastName}
                         </Typography>
                         <Typography variant="body2" color="text.secondary">
-                            Reach out directly
+                            Premium Member
                         </Typography>
                     </Box>
-                    <Stack spacing={2}>
-                        <Box
+                    <Stack spacing={2.5}>
+                        <Paper
+                            elevation={0}
                             sx={{
-                                p: 2,
-                                bgcolor: '#f5f5f5',
+                                p: 2.5,
+                                bgcolor: (theme) => alpha(theme.palette.primary.main, 0.05),
                                 borderRadius: 3,
                                 display: 'flex',
                                 alignItems: 'center',
-                                gap: 2,
+                                gap: 2.5,
+                                border: '1px solid',
+                                borderColor: (theme) => alpha(theme.palette.primary.main, 0.1)
                             }}
                         >
-                            <Phone color="primary" />
+                            <Box sx={{
+                                p: 1.5,
+                                borderRadius: '50%',
+                                bgcolor: 'white',
+                                color: 'primary.main',
+                                display: 'flex',
+                                boxShadow: '0 2px 8px rgba(0,0,0,0.05)'
+                            }}>
+                                <Phone />
+                            </Box>
                             <Box>
-                                <Typography variant="caption" color="text.secondary">
-                                    Mobile Number
+                                <Typography variant="caption" color="text.secondary" fontWeight={600} sx={{ letterSpacing: 1 }}>
+                                    MOBILE NUMBER
                                 </Typography>
-                                <Typography variant="h6" fontWeight={700}>
+                                <Typography variant="h6" fontWeight={700} color="text.primary">
                                     {profile.mobileNumber || 'Not provided'}
                                 </Typography>
                             </Box>
-                        </Box>
+                        </Paper>
+
                         {profile.whatsappNumber && (
-                            <Box
+                            <Paper
+                                elevation={0}
                                 sx={{
-                                    p: 2,
-                                    bgcolor: '#e8f5e9',
+                                    p: 2.5,
+                                    bgcolor: (theme) => alpha(theme.palette.success.main, 0.05),
                                     borderRadius: 3,
                                     display: 'flex',
                                     alignItems: 'center',
-                                    gap: 2,
+                                    gap: 2.5,
+                                    border: '1px solid',
+                                    borderColor: (theme) => alpha(theme.palette.success.main, 0.1)
                                 }}
                             >
-                                <Message color="success" />
+                                <Box sx={{
+                                    p: 1.5,
+                                    borderRadius: '50%',
+                                    bgcolor: 'white',
+                                    color: 'success.main',
+                                    display: 'flex',
+                                    boxShadow: '0 2px 8px rgba(0,0,0,0.05)'
+                                }}>
+                                    <Message />
+                                </Box>
                                 <Box>
-                                    <Typography variant="caption" color="text.secondary">
-                                        WhatsApp
+                                    <Typography variant="caption" color="text.secondary" fontWeight={600} sx={{ letterSpacing: 1 }}>
+                                        WHATSAPP
                                     </Typography>
-                                    <Typography variant="h6" fontWeight={700}>
+                                    <Typography variant="h6" fontWeight={700} color="text.primary">
                                         {profile.whatsappNumber}
                                     </Typography>
                                 </Box>
-                            </Box>
+                            </Paper>
                         )}
                     </Stack>
                 </DialogContent>
-                <DialogActions sx={{ justifyContent: 'center', pb: 2 }}>
-                    <Button onClick={() => setContactVisible(false)} sx={{ fontWeight: 700 }}>
+                <DialogActions sx={{ justifyContent: 'center', pb: 3 }}>
+                    <Button
+                        onClick={() => setContactVisible(false)}
+                        variant="outlined"
+                        size="large"
+                        sx={{
+                            fontWeight: 700,
+                            borderRadius: 3,
+                            px: 4,
+                            borderColor: 'divider',
+                            color: 'text.secondary'
+                        }}
+                    >
                         Close
                     </Button>
                 </DialogActions>
@@ -556,20 +694,44 @@ const PublicProfile: React.FC = () => {
                 open={Boolean(menuAnchor)}
                 onClose={() => setMenuAnchor(null)}
                 PaperProps={{
-                    sx: { borderRadius: 2, minWidth: 200 },
+                    elevation: 4,
+                    sx: {
+                        borderRadius: 3,
+                        minWidth: 200,
+                        mt: 1.5,
+                        overflow: 'visible',
+                        '&:before': {
+                            content: '""',
+                            display: 'block',
+                            position: 'absolute',
+                            top: 0,
+                            right: 14,
+                            width: 10,
+                            height: 10,
+                            bgcolor: 'background.paper',
+                            transform: 'translateY(-50%) rotate(45deg)',
+                            zIndex: 0,
+                        },
+                    }
                 }}
+                transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+                anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
             >
-                <MenuItem onClick={handleBlockUser}>
+                <MenuItem onClick={handleBlockUser} sx={{ py: 1.5 }}>
                     <ListItemIcon>
                         <Block fontSize="small" color="error" />
                     </ListItemIcon>
-                    <ListItemText>Block User</ListItemText>
+                    <ListItemText primaryTypographyProps={{ fontWeight: 600, color: 'error.main' }}>
+                        Block User
+                    </ListItemText>
                 </MenuItem>
-                <MenuItem onClick={handleReportUser}>
+                <MenuItem onClick={handleReportUser} sx={{ py: 1.5 }}>
                     <ListItemIcon>
                         <Flag fontSize="small" color="warning" />
                     </ListItemIcon>
-                    <ListItemText>Report User</ListItemText>
+                    <ListItemText primaryTypographyProps={{ fontWeight: 600 }}>
+                        Report User
+                    </ListItemText>
                 </MenuItem>
             </Menu>
         </Box>

@@ -60,6 +60,8 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
                     height="280"
                     image={
                         profile.profilePicture ||
+                        profile.photos?.find((p: any) => p.isMain)?.url ||
+                        profile.photos?.[0]?.url ||
                         'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=500&auto=format&fit=crop&q=60'
                     }
                     alt={profile.fullName ? `${profile.fullName.firstName} ${profile.fullName.lastName}` : 'Profile'}

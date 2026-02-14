@@ -30,10 +30,9 @@ interface User {
 interface AuthState {
     user: User | null;
     accessToken: string | null;
-    refreshToken: string | null;
     isAuthenticated: boolean;
     checkAuth: () => Promise<void>;
-    setAuth: (user: User, accessToken: string, refreshToken?: string) => void;
+    setAuth: (user: User, accessToken: string) => void;
     setToken: (accessToken: string) => void;
     setUser: (user: User) => void;
     logout: () => void;
@@ -44,7 +43,6 @@ export const useAuthStore = create<AuthState>()(
         (set, get) => ({
             user: null,
             accessToken: null,
-            refreshToken: null,
             isAuthenticated: false,
 
             checkAuth: async () => {
@@ -63,10 +61,10 @@ export const useAuthStore = create<AuthState>()(
                 }
             },
 
-            setAuth: (user, accessToken, refreshToken) => set({ user, accessToken, refreshToken: refreshToken || null, isAuthenticated: true }),
+            setAuth: (user: User, accessToken: string) => set({ user, accessToken, isAuthenticated: true }),
             setToken: (accessToken) => set({ accessToken, isAuthenticated: true }),
             setUser: (user) => set({ user }),
-            logout: () => set({ user: null, accessToken: null, refreshToken: null, isAuthenticated: false }),
+            logout: () => set({ user: null, accessToken: null, isAuthenticated: false }),
         }),
         {
             name: 'auth-storage',

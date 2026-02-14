@@ -92,7 +92,7 @@ const EditPhotos: React.FC<EditPhotosProps> = ({ onPhotoChange }) => {
                             <CardMedia
                                 component="img"
                                 height="180"
-                                image={photo.url?.startsWith('http') ? photo.url : `${import.meta.env.VITE_API_URL}${photo.url}`}
+                                image={photo.url}
                                 alt="Profile"
                             />
                             {photo.isMain && (

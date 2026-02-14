@@ -38,62 +38,62 @@ const profileSchema = z.object({
     fullName: z.object({
         firstName: z.string().min(1, "First Name is required"),
         lastName: z.string().min(1, "Last Name is required"),
-        middleName: z.string().optional(),
+        middleName: z.string().nullish(),
     }),
-    profileCreatedFor: z.string().optional(),
-    gender: z.enum(['Male', 'Female', 'Transgender'], { errorMap: () => ({ message: "Select a valid gender" }) }),
+    profileCreatedFor: z.string().nullish(),
+    gender: z.enum(['Male', 'Female', 'Transgender']).nullish(),
     dateOfBirth: z.string().refine((val) => !isNaN(Date.parse(val)), { message: "Invalid Date" }),
-    maritalStatus: z.string().optional(),
-    motherTongue: z.string().optional(),
-    country: z.string().optional(),
-    state: z.string().optional(),
-    city: z.string().optional(),
-    citizenship: z.string().optional(),
-    nativePlace: z.string().optional(),
-    residentialType: z.string().optional(),
-    nriStatus: z.boolean().optional(),
-    religion: z.string().optional(),
-    community: z.string().optional(),
-    caste: z.string().optional(),
-    subCaste: z.string().optional(),
-    gotra: z.string().optional(),
-    nakshatram: z.string().optional(),
-    rashi: z.string().optional(),
-    manglik: z.string().optional(),
-    highestEducation: z.string().optional(),
-    collegeName: z.string().optional(),
-    professionalQualification: z.string().optional(),
-    occupation: z.string().optional(),
-    annualIncome: z.number().optional(),
-    officeAddress: z.string().optional(),
-    fatherName: z.string().optional(),
-    fatherOccupation: z.string().optional(),
-    motherName: z.string().optional(),
-    motherOccupation: z.string().optional(),
+    maritalStatus: z.string().nullish(),
+    motherTongue: z.string().nullish(),
+    country: z.string().nullish(),
+    state: z.string().nullish(),
+    city: z.string().nullish(),
+    citizenship: z.string().nullish(),
+    nativePlace: z.string().nullish(),
+    residentialType: z.string().nullish(),
+    nriStatus: z.boolean().nullish(),
+    religion: z.string().nullish(),
+    community: z.string().nullish(),
+    caste: z.string().nullish(),
+    subCaste: z.string().nullish(),
+    gotra: z.string().nullish(),
+    nakshatram: z.string().nullish(),
+    rashi: z.string().nullish(),
+    manglik: z.string().nullish(),
+    highestEducation: z.string().nullish(),
+    collegeName: z.string().nullish(),
+    professionalQualification: z.string().nullish(),
+    occupation: z.string().nullish(),
+    annualIncome: z.number().nullish(),
+    officeAddress: z.string().nullish(),
+    fatherName: z.string().nullish(),
+    fatherOccupation: z.string().nullish(),
+    motherName: z.string().nullish(),
+    motherOccupation: z.string().nullish(),
     numberOfSiblings: z.object({
-        brothers: z.object({ married: z.number(), unmarried: z.number() }),
-        sisters: z.object({ married: z.number(), unmarried: z.number() }),
-    }).optional(),
-    familyType: z.string().optional(),
-    familyValues: z.string().optional(),
-    familyFinancialStatus: z.string().optional(),
-    dietaryHabits: z.string().optional(),
-    drinking: z.string().optional(),
-    smoking: z.string().optional(),
-    hobbiesString: z.string().optional(),
-    interestsString: z.string().optional(),
-    aboutMe: z.string().optional(),
-    height: z.string().optional(),
-    bodyType: z.string().optional(),
-    complexion: z.string().optional(),
-    isDisabled: z.boolean().optional(),
-    disabilityType: z.string().optional(),
-    disabilityDescription: z.string().optional(),
+        brothers: z.object({ married: z.number().nullish(), unmarried: z.number().nullish() }),
+        sisters: z.object({ married: z.number().nullish(), unmarried: z.number().nullish() }),
+    }).nullish(),
+    familyType: z.string().nullish(),
+    familyValues: z.string().nullish(),
+    familyFinancialStatus: z.string().nullish(),
+    dietaryHabits: z.string().nullish(),
+    drinking: z.string().nullish(),
+    smoking: z.string().nullish(),
+    hobbiesString: z.string().nullish(),
+    interestsString: z.string().nullish(),
+    aboutMe: z.string().nullish(),
+    height: z.string().nullish(),
+    bodyType: z.string().nullish(),
+    complexion: z.string().nullish(),
+    isDisabled: z.boolean().nullish(),
+    disabilityType: z.string().nullish(),
+    disabilityDescription: z.string().nullish(),
     partnerPreferences: z.object({
-        ageRange: z.object({ min: z.number(), max: z.number() }).optional(),
-        heightRange: z.object({ min: z.string(), max: z.string() }).optional(),
-    }).optional(),
-    photos: z.array(z.any()).optional(),
+        ageRange: z.object({ min: z.number().nullish(), max: z.number().nullish() }).nullish(),
+        heightRange: z.object({ min: z.string().nullish(), max: z.string().nullish() }).nullish(),
+    }).nullish(),
+    photos: z.array(z.any()).nullish(),
 });
 
 type ProfileFormInputs = z.infer<typeof profileSchema>;
@@ -122,9 +122,60 @@ const ProfileEdit: React.FC = () => {
     const methods = useForm<ProfileFormInputs>({
         resolver: zodResolver(profileSchema),
         defaultValues: {
+            fullName: { firstName: '', lastName: '', middleName: '' },
+            gender: 'Male',
+            maritalStatus: 'Never Married',
+            profileCreatedFor: 'Self',
+            country: '',
+            state: '',
+            city: '',
+            citizenship: '',
+            nativePlace: '',
+            residentialType: 'Own',
+            nriStatus: false,
             isDisabled: false,
-            numberOfSiblings: { brothers: { married: 0, unmarried: 0 }, sisters: { married: 0, unmarried: 0 } },
-            nriStatus: false
+            disabilityType: '',
+            disabilityDescription: '',
+            religion: '',
+            community: '',
+            caste: '',
+            subCaste: '',
+            gotra: '',
+            nakshatram: '',
+            rashi: '',
+            manglik: 'No',
+            highestEducation: '',
+            collegeName: '',
+            professionalQualification: '',
+            occupation: '',
+            annualIncome: 0,
+            officeAddress: '',
+            fatherName: '',
+            fatherOccupation: '',
+            motherName: '',
+            motherOccupation: '',
+            familyType: 'Nuclear Family',
+            familyValues: 'Moderate',
+            familyFinancialStatus: '',
+            dietaryHabits: 'Vegetarian',
+            drinking: 'No',
+            smoking: 'No',
+            hobbiesString: '',
+            interestsString: '',
+            aboutMe: '',
+            height: '',
+            bodyType: '',
+            complexion: '',
+            dateOfBirth: new Date().toISOString().split('T')[0],
+            numberOfSiblings: {
+                brothers: { married: 0, unmarried: 0 },
+                sisters: { married: 0, unmarried: 0 }
+            },
+            partnerPreferences: {
+                ageRange: { min: 18, max: 50 },
+                heightRange: { min: '', max: '' }
+            },
+            photos: []
         }
     });
 
@@ -147,13 +198,76 @@ const ProfileEdit: React.FC = () => {
 
             const formData = {
                 ...data,
+                fullName: {
+                    firstName: data.fullName?.firstName || '',
+                    lastName: data.fullName?.lastName || '',
+                    middleName: data.fullName?.middleName || ''
+                },
+                profileCreatedFor: data.profileCreatedFor || 'Self',
+                gender: data.gender || 'Male',
+                maritalStatus: data.maritalStatus || 'Never Married',
+                motherTongue: data.motherTongue || '',
+                country: data.country || '',
+                state: data.state || '',
+                city: data.city || '',
+                citizenship: data.citizenship || '',
+                nativePlace: data.nativePlace || '',
+                residentialType: data.residentialType || 'Own',
+                nriStatus: !!data.nriStatus,
+                religion: data.religion || '',
+                community: data.community || '',
+                caste: data.caste || '',
+                subCaste: data.subCaste || '',
+                gotra: data.gotra || '',
+                nakshatram: data.nakshatram || '',
+                rashi: data.rashi || '',
+                manglik: data.manglik || 'No',
+                highestEducation: data.highestEducation || '',
+                collegeName: data.collegeName || '',
+                professionalQualification: data.professionalQualification || '',
+                occupation: data.occupation || '',
+                annualIncome: Number(data.annualIncome) || 0,
+                officeAddress: data.officeAddress || '',
+                fatherName: data.fatherName || '',
+                fatherOccupation: data.fatherOccupation || '',
+                motherName: data.motherName || '',
+                motherOccupation: data.motherOccupation || '',
+                familyType: data.familyType || 'Nuclear Family',
+                familyValues: data.familyValues || 'Moderate',
+                familyFinancialStatus: data.familyFinancialStatus || '',
+                dietaryHabits: data.dietaryHabits || 'Vegetarian',
+                drinking: data.drinking || 'No',
+                smoking: data.smoking || 'No',
+                aboutMe: data.aboutMe || '',
+                height: data.height || '',
+                bodyType: data.bodyType || '',
+                complexion: data.complexion || '',
+                isDisabled: !!data.isDisabled,
+                disabilityType: data.disabilityType || '',
+                disabilityDescription: data.disabilityDescription || '',
                 dateOfBirth: data.dateOfBirth ? new Date(data.dateOfBirth).toISOString().split('T')[0] : '',
                 hobbiesString: data.hobbies?.join(', ') || '',
                 interestsString: data.interests?.join(', ') || '',
-                numberOfSiblings: data.numberOfSiblings ? {
-                    brothers: { married: data.numberOfSiblings.brothers?.married ?? 0, unmarried: data.numberOfSiblings.brothers?.unmarried ?? 0 },
-                    sisters: { married: data.numberOfSiblings.sisters?.married ?? 0, unmarried: data.numberOfSiblings.sisters?.unmarried ?? 0 }
-                } : undefined,
+                numberOfSiblings: {
+                    brothers: {
+                        married: data.numberOfSiblings?.brothers?.married ?? 0,
+                        unmarried: data.numberOfSiblings?.brothers?.unmarried ?? 0
+                    },
+                    sisters: {
+                        married: data.numberOfSiblings?.sisters?.married ?? 0,
+                        unmarried: data.numberOfSiblings?.sisters?.unmarried ?? 0
+                    }
+                },
+                partnerPreferences: {
+                    ageRange: {
+                        min: data.partnerPreferences?.ageRange?.min ?? 18,
+                        max: data.partnerPreferences?.ageRange?.max ?? 50
+                    },
+                    heightRange: {
+                        min: data.partnerPreferences?.heightRange?.min ?? '',
+                        max: data.partnerPreferences?.heightRange?.max ?? ''
+                    }
+                }
             };
 
             reset(formData);
@@ -169,16 +283,41 @@ const ProfileEdit: React.FC = () => {
         fetchProfileData();
     }, []);
 
+    const onFormError = (errors: any) => {
+        console.error("Form Validation Errors:", errors);
+        showToast("Please fix the errors in the form before saving", "error");
+    };
+
     const onSubmit = async (data: ProfileFormInputs) => {
         setUpdating(true);
         try {
-            const payload = {
+            // Clean up the data to match API expectations (remove nulls, convert hobbies/interests)
+            const payload: any = {
                 ...data,
-                hobbies: data.hobbiesString?.split(',').map(s => s.trim()).filter(Boolean) || [],
-                interests: data.interestsString?.split(',').map(s => s.trim()).filter(Boolean) || [],
+                hobbies: data.hobbiesString ? data.hobbiesString.split(',').map(s => s.trim()).filter(Boolean) : [],
+                interests: data.interestsString ? data.interestsString.split(',').map(s => s.trim()).filter(Boolean) : [],
             };
 
-            await userApi.updateProfile(payload);
+            // Recursively remove nulls and use undefined instead for the API
+            const cleanPayload = (obj: any): any => {
+                const newObj: any = Array.isArray(obj) ? [] : {};
+                for (const key in obj) {
+                    if (obj[key] === null) {
+                        // Skip nulls, API prefers missing or undefined
+                    } else if (typeof obj[key] === 'object' && obj[key] !== null && !(obj[key] instanceof Date)) {
+                        newObj[key] = cleanPayload(obj[key]);
+                    } else {
+                        newObj[key] = obj[key];
+                    }
+                }
+                return newObj;
+            };
+
+            const finalPayload = cleanPayload(payload);
+            delete finalPayload.hobbiesString;
+            delete finalPayload.interestsString;
+
+            await userApi.updateProfile(finalPayload);
             showToast("Profile updated successfully", "success");
             fetchProfileData();
         } catch (error) {
@@ -365,7 +504,7 @@ const ProfileEdit: React.FC = () => {
                                 </Box>
 
                                 <FormProvider {...methods}>
-                                    <form onSubmit={handleSubmit(onSubmit)}>
+                                    <form onSubmit={handleSubmit(onSubmit, onFormError)}>
                                         <Box sx={{ mb: 4 }}>
                                             {activeTab === 0 && <EditPersonal />}
                                             {activeTab === 1 && <EditLocation />}
