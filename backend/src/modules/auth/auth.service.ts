@@ -21,12 +21,18 @@ export class AuthService {
         // Generate OTP
         const otp = Math.floor(100000 + Math.random() * 900000).toString();
         const otpExpiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+
+        // Generate Verification Token
+        const verificationToken = crypto.randomBytes(32).toString('hex');
+        const verificationTokenExpiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+
         const isVerified = false;
 
-        console.log('\n🔐 ========== REGISTRATION OTP ==========');
+        console.log('\n🔐 ========== REGISTRATION DETAILS ==========');
         console.log(`Email: ${email}`);
         console.log(`OTP: ${otp}`);
-        console.log('==========================================\n');
+        console.log(`Token: ${verificationToken}`);
+        console.log('============================================\n');
 
         // Calculate age if dob is provided
         let age: number | undefined;
@@ -48,14 +54,35 @@ export class AuthService {
             isVerified,
             otp,
             otpExpiresAt,
+            emailVerificationToken: verificationToken,
+            emailVerificationTokenExpiresAt: verificationTokenExpiresAt,
         });
 
         // Send email
+        const verificationUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/verify-email?token=${verificationToken}`;
         await sendEmail({
             email: user.email,
             subject: 'Verify your EqualHeart Account',
-            message: `Your OTP for account verification is ${otp}. It will expire in 10 minutes.`,
+            message: `Your OTP for account verification is ${otp}. It will expire in 10 minutes.\n\nAlternatively, you can verify your account by clicking the link below:\n${verificationUrl}`,
         });
+
+        return user;
+    }
+
+    static async verifyEmail(token: string): Promise<IUser> {
+        const user = await User.findOne({
+            emailVerificationToken: token,
+            emailVerificationTokenExpiresAt: { $gt: new Date() }
+        });
+
+        if (!user) {
+            throw new Error('Invalid or expired verification link');
+        }
+
+        user.isVerified = true;
+        user.emailVerificationToken = undefined;
+        user.emailVerificationTokenExpiresAt = undefined;
+        await user.save();
 
         return user;
     }

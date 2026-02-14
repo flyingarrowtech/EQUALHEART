@@ -23,3 +23,16 @@ export const verifyOtpSchema = z.object({
     email: z.string().email(),
     otp: z.string().length(6, 'OTP must be 6 digits'),
 });
+
+export const verifyEmailSchema = z.object({
+    token: z.string().min(1, 'Token is required'),
+});
+
+export const mobileLoginSchema = z.object({
+    mobileNumber: z.string().min(10, 'Invalid mobile number'),
+    otp: z.string().length(6, 'OTP must be 6 digits'),
+});
+
+export const sendMobileOtpSchema = z.object({
+    mobileNumber: z.string().min(10, 'Invalid mobile number'),
+});

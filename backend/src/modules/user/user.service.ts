@@ -235,6 +235,27 @@ export class UserService {
     }
 
     static async deletePhoto(userId: string, photoId: string): Promise<IUser | null> {
+        const user = await User.findById(userId);
+        if (!user) throw new Error('User not found');
+
+        const photo = user.photos.find((p: any) => p._id.toString() === photoId);
+        if (photo && photo.publicId) {
+            try {
+                const { v2: cloudinary } = require('cloudinary');
+                // Ensure cloudinary is configured
+                cloudinary.config({
+                    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+                    api_key: process.env.CLOUDINARY_API_KEY,
+                    api_secret: process.env.CLOUDINARY_API_SECRET
+                });
+                await cloudinary.uploader.destroy(photo.publicId);
+                console.log(`Cloudinary asset destroyed: ${photo.publicId}`);
+            } catch (error) {
+                console.error('Failed to delete from Cloudinary:', error);
+                // Continue with DB deletion even if Cloudinary fails
+            }
+        }
+
         return await User.findByIdAndUpdate(
             userId,
             { $pull: { photos: { _id: photoId } } },
@@ -424,5 +445,51 @@ export class UserService {
 
         await user.save();
         return user;
+    }
+
+    static async getDashboardData(userId: string) {
+        const user = await User.findById(userId);
+        if (!user) throw new Error('User not found');
+
+        // Get recent matches (first 4)
+        const matches = await this.calculateMatches(user);
+        const newMatches = matches.slice(0, 4).map((m: any) => ({
+            id: m._id,
+            name: `${m.fullName.firstName} ${m.fullName.lastName}`,
+            age: m.age,
+            location: `${m.city}, ${m.state}`,
+            profession: m.occupation,
+            image: m.photos.find((p: any) => p.isMain)?.url || m.photos[0]?.url || 'https://via.placeholder.com/300',
+            matchScore: m.matchingScore
+        }));
+
+        // Get received interests (first 3)
+        const receivedInterests = await this.getInterests(userId, 'received');
+        const recentInterests = receivedInterests.slice(0, 3).map((i: any) => ({
+            id: i._id,
+            name: `${i.fullName.firstName} ${i.fullName.lastName}`,
+            age: i.age,
+            profession: i.occupation,
+            image: i.photos.find((p: any) => p.isMain)?.url || i.photos[0]?.url || 'https://via.placeholder.com/150'
+        }));
+
+        // Stats
+        const stats = [
+            { label: 'Profile Views', value: user.profileVisitors.length, icon: 'Visibility', color: '#4CAF50' },
+            { label: 'Interests Sent', value: user.behavioralLogs.filter(l => l.action === 'Like').length, icon: 'Favorite', color: '#E91E63' },
+            { label: 'Connections', value: user.matches.length, icon: 'Chat', color: '#2196F3' },
+            { label: 'Shortlisted', value: user.shortlistedUsers.length, icon: 'Star', color: '#FFC107' },
+        ];
+
+        return {
+            newMatches,
+            stats,
+            recentInterests,
+            membership: {
+                tier: user.membership.tier,
+                expiryDate: user.membership.expiryDate,
+                daysLeft: user.membership.expiryDate ? Math.ceil((user.membership.expiryDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24)) : 0
+            }
+        };
     }
 }

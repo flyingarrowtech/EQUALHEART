@@ -141,6 +141,7 @@ export interface IUser extends Document {
         url: string;
         isMain: boolean;
         isVerified: boolean;
+        publicId?: string;
         metadata?: {
             thumbnailUrl?: string;
             watermarkedUrl?: string;
@@ -324,6 +325,7 @@ const UserSchema: Schema = new Schema({
         url: { type: String },
         isMain: { type: Boolean, default: false },
         isVerified: { type: Boolean, default: false },
+        publicId: { type: String },
         metadata: {
             thumbnailUrl: { type: String },
             watermarkedUrl: { type: String }

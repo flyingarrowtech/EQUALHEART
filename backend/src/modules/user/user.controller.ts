@@ -401,4 +401,19 @@ export class UserController {
             next(error);
         }
     }
+
+    static async getDashboardData(req: Request, res: Response, next: NextFunction) {
+        try {
+            const userAuth = (req as any).user as { userId: string } | undefined;
+            if (!userAuth?.userId) return res.status(401).json({ success: false, message: 'Unauthorized' });
+
+            const dashboardData = await UserService.getDashboardData(userAuth.userId);
+            res.status(200).json({
+                success: true,
+                data: dashboardData
+            });
+        } catch (error: any) {
+            next(error);
+        }
+    }
 }

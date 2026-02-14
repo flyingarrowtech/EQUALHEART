@@ -7,6 +7,7 @@ import path from 'path';
 import authRoutes from './modules/auth/auth.routes';
 import userRoutes from './modules/user/user.routes';
 import adminRoutes from './modules/admin/admin.routes';
+import { authRateLimiter } from './middleware/rateLimit';
 
 const app: Application = express();
 
@@ -27,7 +28,7 @@ app.use(cookieParser());
 app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 
 // Routes
-app.use('/api/v1/auth', authRoutes);
+app.use('/api/v1/auth', authRateLimiter, authRoutes);
 app.use('/api/v1/user', userRoutes);
 app.use('/api/v1/admin', adminRoutes);
 
