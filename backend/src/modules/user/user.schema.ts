@@ -18,6 +18,7 @@ export interface IUser extends Document {
     mobileOtpExpiresAt?: Date;
 
     kycStatus: 'Pending' | 'Verified' | 'Rejected' | 'None';
+    profileCompleted: boolean;
 
     // Basic Account Information
     profileCreatedFor: 'Self' | 'Son' | 'Daughter' | 'Brother' | 'Sister' | 'Friend' | 'Relative';
@@ -83,6 +84,7 @@ export interface IUser extends Document {
 
     // Lifestyle
     hobbies: string[];
+    interests: string[];
     aboutMe: string;
     partnerPreferences: {
         ageRange?: { min: number; max: number };
@@ -112,6 +114,7 @@ export interface IUser extends Document {
     // Membership & Premium
     membership: {
         tier: 'Basic' | 'Silver' | 'Gold' | 'Platinum';
+        startDate?: Date;
         expiryDate?: Date;
     };
 
@@ -130,6 +133,7 @@ export interface IUser extends Document {
     blockedUsers: mongoose.Types.ObjectId[];
     shortlistedUsers: mongoose.Types.ObjectId[];
     reportedBy: mongoose.Types.ObjectId[];
+    matches: mongoose.Types.ObjectId[];
     matchingScore?: number; // Calculated field for AI matching
 
     // Photos & Verification
@@ -176,6 +180,7 @@ const UserSchema: Schema = new Schema({
     isVerified: { type: Boolean, default: false }, // Overall profile verification
     role: { type: String, enum: ['user', 'admin'], default: 'user' },
     kycStatus: { type: String, enum: ['Pending', 'Verified', 'Rejected', 'None'], default: 'None' },
+    profileCompleted: { type: Boolean, default: false },
 
     otp: { type: String, select: false },
     otpExpiresAt: { type: Date, select: false },
@@ -200,6 +205,7 @@ const UserSchema: Schema = new Schema({
 
     membership: {
         tier: { type: String, enum: ['Basic', 'Silver', 'Gold', 'Platinum'], default: 'Basic' },
+        startDate: { type: Date },
         expiryDate: { type: Date }
     },
 
@@ -217,6 +223,7 @@ const UserSchema: Schema = new Schema({
     blockedUsers: [{ type: Schema.Types.ObjectId, ref: 'User' }],
     shortlistedUsers: [{ type: Schema.Types.ObjectId, ref: 'User' }],
     reportedBy: [{ type: Schema.Types.ObjectId, ref: 'User' }],
+    matches: [{ type: Schema.Types.ObjectId, ref: 'User' }],
     matchingScore: { type: Number, default: 0 },
 
     profileCreatedFor: { type: String, enum: ['Self', 'Son', 'Daughter', 'Brother', 'Sister', 'Friend', 'Relative'] },
@@ -293,6 +300,7 @@ const UserSchema: Schema = new Schema({
     familyFinancialStatus: { type: String },
 
     hobbies: [{ type: String }],
+    interests: [{ type: String }],
     aboutMe: { type: String },
     partnerPreferences: {
         ageRange: {

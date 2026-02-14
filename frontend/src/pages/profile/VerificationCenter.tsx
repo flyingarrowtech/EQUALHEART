@@ -67,7 +67,7 @@ const VerificationCenter: React.FC = () => {
                 backgroundImage="https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?w=1920&q=80"
             />
 
-            <Container maxWidth="md" sx={{ mt: -6 }}>
+            <Container maxWidth="md" sx={{ mt: -6, position: 'relative', zIndex: 1 }}>
                 <Paper
                     component={motion.div}
                     initial={{ opacity: 0, y: 20 }}

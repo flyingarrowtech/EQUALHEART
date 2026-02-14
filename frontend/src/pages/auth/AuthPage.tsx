@@ -27,7 +27,7 @@ const AuthPage: React.FC = () => {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                background: 'linear-gradient(135deg, rgba(233, 30, 99, 0.9) 0%, rgba(156, 39, 176, 0.9) 100%)',
+                background: 'linear-gradient(135deg, rgba(233, 30, 99, 0.6) 0%, rgba(156, 39, 176, 0.6) 100%)', // Richer overlay
                 backgroundImage: 'url(https://images.unsplash.com/photo-1522673607200-164d1b6ce486?w=1920&q=80)',
                 backgroundSize: 'cover',
                 backgroundPosition: 'center',
@@ -40,32 +40,34 @@ const AuthPage: React.FC = () => {
             {/* Animated Background Elements */}
             <Box
                 component={motion.div}
-                animate={{ scale: [1, 1.2, 1], rotate: [0, 90, 0] }}
-                transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
+                animate={{ scale: [1, 1.2, 1], rotate: [0, 90, 0], x: [0, 50, 0], y: [0, 30, 0] }}
+                transition={{ duration: 20, repeat: Infinity, ease: 'easeInOut' }}
                 sx={{
                     position: 'absolute',
                     top: '-10%',
                     right: '-5%',
-                    width: 400,
-                    height: 400,
+                    width: 600,
+                    height: 600,
                     borderRadius: '50%',
-                    background: 'radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%)',
-                    filter: 'blur(40px)',
+                    background: 'radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 70%)',
+                    filter: 'blur(60px)',
+                    zIndex: 0,
                 }}
             />
             <Box
                 component={motion.div}
-                animate={{ scale: [1, 1.3, 1], rotate: [0, -90, 0] }}
-                transition={{ duration: 25, repeat: Infinity, ease: 'linear' }}
+                animate={{ scale: [1, 1.3, 1], rotate: [0, -90, 0], x: [0, -30, 0], y: [0, -50, 0] }}
+                transition={{ duration: 25, repeat: Infinity, ease: 'easeInOut' }}
                 sx={{
                     position: 'absolute',
                     bottom: '-10%',
                     left: '-5%',
-                    width: 500,
-                    height: 500,
+                    width: 700,
+                    height: 700,
                     borderRadius: '50%',
-                    background: 'radial-gradient(circle, rgba(255,255,255,0.08) 0%, transparent 70%)',
-                    filter: 'blur(40px)',
+                    background: 'radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%)',
+                    filter: 'blur(60px)',
+                    zIndex: 0,
                 }}
             />
 

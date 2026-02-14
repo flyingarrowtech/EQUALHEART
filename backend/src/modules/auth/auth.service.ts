@@ -18,26 +18,15 @@ export class AuthService {
             throw new Error('User with this email or mobile number already exists');
         }
 
-        // Check if we're in development mode without SMTP configured
-        const isDevelopmentWithoutSMTP = !process.env.SMTP_HOST || !process.env.SMTP_USER;
+        // Generate OTP
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        const otpExpiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+        const isVerified = false;
 
-        let otp: string | undefined;
-        let otpExpiresAt: Date | undefined;
-        let isVerified = false;
-
-        if (isDevelopmentWithoutSMTP) {
-            // In development without SMTP, auto-verify the user
-            isVerified = true;
-            console.log('\n🔓 ========== AUTO-VERIFIED (Development Mode) ==========');
-            console.log(`Email: ${email}`);
-            console.log(`User has been automatically verified for development.`);
-            console.log(`You can login immediately without email verification.`);
-            console.log('========================================================\n');
-        } else {
-            // In production or with SMTP configured, use OTP verification
-            otp = Math.floor(100000 + Math.random() * 900000).toString();
-            otpExpiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
-        }
+        console.log('\n🔐 ========== REGISTRATION OTP ==========');
+        console.log(`Email: ${email}`);
+        console.log(`OTP: ${otp}`);
+        console.log('==========================================\n');
 
         // Calculate age if dob is provided
         let age: number | undefined;
@@ -61,14 +50,12 @@ export class AuthService {
             otpExpiresAt,
         });
 
-        // Only send email if SMTP is configured
-        if (!isDevelopmentWithoutSMTP && otp) {
-            await sendEmail({
-                email: user.email,
-                subject: 'Verify your EqualHeart Account',
-                message: `Your OTP for account verification is ${otp}. It will expire in 10 minutes.`,
-            });
-        }
+        // Send email
+        await sendEmail({
+            email: user.email,
+            subject: 'Verify your EqualHeart Account',
+            message: `Your OTP for account verification is ${otp}. It will expire in 10 minutes.`,
+        });
 
         return user;
     }
@@ -147,42 +134,38 @@ export class AuthService {
 
         return user;
     }
-    static async generateEmailVerificationToken(userId: string): Promise<string> {
-        const token = crypto.randomBytes(32).toString('hex');
-        const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+    static async googleAuth(googleProfile: any): Promise<IUser> {
+        const { email, given_name, family_name, sub: googleId } = googleProfile;
 
-        await User.findByIdAndUpdate(userId, {
-            emailVerificationToken: hashedToken,
-            emailVerificationTokenExpiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000) // 24 hours
+        let user = await User.findOne({
+            $or: [
+                { 'socialAuth.id': googleId, 'socialAuth.provider': 'Google' },
+                { email }
+            ]
         });
 
-        return token;
-    }
-
-    static async sendVerificationEmail(user: IUser, token: string) {
-        const verificationUrl = `${process.env.CLIENT_URL}/auth/verify-email?token=${token}`;
-
-        await sendEmail({
-            email: user.email,
-            subject: 'Verify your EqualHeart Account',
-            message: `Please verify your email by clicking on the following link: ${verificationUrl}\n\nThis link will expire in 24 hours.`
-        });
-    }
-
-    static async verifyEmail(token: string): Promise<IUser> {
-        const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
-
-        const user = await User.findOne({
-            emailVerificationToken: hashedToken,
-            emailVerificationTokenExpiresAt: { $gt: new Date() }
-        });
-
-        if (!user) throw new Error('Invalid or expired verification token');
-
-        user.isVerified = true;
-        user.emailVerificationToken = undefined;
-        user.emailVerificationTokenExpiresAt = undefined;
-        await user.save();
+        if (!user) {
+            // Create new user
+            user = await User.create({
+                email,
+                fullName: {
+                    firstName: given_name,
+                    lastName: family_name || ''
+                },
+                socialAuth: [{ provider: 'Google', id: googleId }],
+                isVerified: true,
+                profileCreatedFor: 'Self'
+            });
+        } else {
+            // if user exists but doesn't have this social auth linked
+            const hasGoogle = user.socialAuth?.some(auth => auth.provider === 'Google' && auth.id === googleId);
+            if (!hasGoogle) {
+                if (!user.socialAuth) user.socialAuth = [];
+                user.socialAuth.push({ provider: 'Google', id: googleId });
+                user.isVerified = true;
+                await user.save();
+            }
+        }
 
         return user;
     }

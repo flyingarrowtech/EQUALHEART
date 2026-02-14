@@ -2,17 +2,16 @@ import { Request, Response, NextFunction } from 'express';
 import { AuthService } from './auth.service';
 import generateTokens from '../../utils/generateTokens';
 import jwt from 'jsonwebtoken';
+import { GoogleAuth } from '../../utils/googleAuth';
 
 export class AuthController {
     static async register(req: Request, res: Response, next: NextFunction) {
         try {
             const user = await AuthService.register(req.body);
-            const token = await AuthService.generateEmailVerificationToken(user._id.toString());
-            await AuthService.sendVerificationEmail(user, token);
 
             res.status(201).json({
                 success: true,
-                message: 'Registration successful. Please check your email to verify your account.',
+                message: 'Registration successful. Please check your email for the 6-digit OTP to verify your account.',
                 data: { email: user.email }
             });
         } catch (error: any) {
@@ -163,22 +162,42 @@ export class AuthController {
         }
     }
 
-    static async socialLoginSuccess(req: Request, res: Response) {
-        if (req.user) {
-            const user = req.user as any;
-            const accessToken = generateTokens(res, user._id.toString());
-            const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
-
-            const userData = encodeURIComponent(JSON.stringify({
-                id: user._id,
-                email: user.email,
-                fullName: user.fullName,
-                isVerified: user.isVerified
-            }));
-
-            res.redirect(`${clientUrl}/auth/social/success?accessToken=${accessToken}&user=${userData}`);
-        } else {
-            res.redirect(`${process.env.CLIENT_URL || 'http://localhost:5173'}/auth/login?error=social_failed`);
+    static async getGoogleAuthUrl(req: Request, res: Response) {
+        try {
+            const url = GoogleAuth.getAuthUrl();
+            res.status(200).json({ success: true, url });
+        } catch (error: any) {
+            res.status(500).json({ success: false, message: error.message });
         }
     }
+
+    static async handleGoogleCallback(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { code } = req.body;
+            if (!code) return res.status(400).json({ success: false, message: 'Auth code is required' });
+
+            const tokens = await GoogleAuth.getTokens(code);
+            const userInfo = await GoogleAuth.getUserInfo(tokens.id_token);
+
+            const user = await AuthService.googleAuth(userInfo);
+            const accessToken = generateTokens(res, user._id.toString());
+
+            res.status(200).json({
+                success: true,
+                message: 'Login successful',
+                data: {
+                    user: {
+                        id: user._id,
+                        email: user.email,
+                        fullName: user.fullName,
+                        isVerified: user.isVerified
+                    },
+                    accessToken
+                }
+            });
+        } catch (error: any) {
+            next(error);
+        }
+    }
+
 }

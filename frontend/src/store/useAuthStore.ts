@@ -24,6 +24,7 @@ interface User {
         isMain: boolean;
         _id?: string;
     }[];
+    profileCompleted: boolean;
 }
 
 interface AuthState {

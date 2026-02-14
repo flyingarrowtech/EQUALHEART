@@ -52,6 +52,7 @@ import {
 import { motion } from 'framer-motion';
 import userApi from '../../api/userApi';
 import { useAuthStore } from '../../store/useAuthStore';
+import { useNotificationStore } from '../../store/useNotificationStore';
 import LoadingState from '../../components/common/LoadingState';
 import ErrorState from '../../components/common/ErrorState';
 
@@ -60,6 +61,7 @@ const PublicProfile: React.FC = () => {
     const navigate = useNavigate();
     const theme = useTheme();
     const currentUser = useAuthStore((state) => state.user);
+    const { showToast, showConfirm } = useNotificationStore();
     const isPremium = currentUser?.membership?.tier !== 'Basic';
 
     const [profile, setProfile] = useState<any>(null);
@@ -92,11 +94,13 @@ const PublicProfile: React.FC = () => {
         try {
             await userApi.logBehavior(id!, 'Like');
             setInterestSent(true);
+            showToast('Interest expressed successfully!', 'success');
         } catch (error: any) {
             if (error.response?.data?.message?.includes('limit reached')) {
+                showToast('Daily interest limit reached. Upgrade to Premium!', 'warning');
                 navigate('/membership');
             } else {
-                alert('Failed to express interest.');
+                showToast('Failed to express interest.', 'error');
             }
         }
     };
@@ -105,42 +109,59 @@ const PublicProfile: React.FC = () => {
         try {
             const res = await userApi.toggleShortlist(id!);
             setIsShortlisted(res.isShortlisted);
+            showToast(res.isShortlisted ? 'Profile shortlisted' : 'Removed from shortlist', 'info');
         } catch (error: any) {
             console.error(error);
+            showToast('Failed to update shortlist', 'error');
         }
     };
 
     const handleViewContact = () => {
         if (!isPremium) {
+            showToast('Please upgrade to Premium to view contact details', 'info');
             navigate('/membership');
             return;
         }
         setContactVisible(true);
     };
 
-    const handleBlockUser = async () => {
-        if (!window.confirm('Are you sure you want to block this user?')) return;
-        try {
-            await userApi.blockUser(id!);
-            setMenuAnchor(null);
-            alert('User blocked successfully');
-            navigate(-1);
-        } catch (error) {
-            console.error(error);
-            alert('Failed to block user');
-        }
+    const handleBlockUser = () => {
+        showConfirm({
+            title: 'Block User',
+            message: 'Are you sure you want to block this user? You will no longer see each other in matches.',
+            confirmText: 'Block',
+            onConfirm: async () => {
+                try {
+                    await userApi.blockUser(id!);
+                    setMenuAnchor(null);
+                    showToast('User blocked successfully', 'success');
+                    navigate(-1);
+                } catch (error) {
+                    console.error(error);
+                    showToast('Failed to block user', 'error');
+                }
+            },
+            onCancel: () => { }
+        });
     };
 
-    const handleReportUser = async () => {
-        if (!window.confirm('Are you sure you want to report this user?')) return;
-        try {
-            await userApi.reportUser(id!);
-            setMenuAnchor(null);
-            alert('User reported successfully. Our team will review this report.');
-        } catch (error) {
-            console.error(error);
-            alert('Failed to report user');
-        }
+    const handleReportUser = () => {
+        showConfirm({
+            title: 'Report User',
+            message: 'Are you sure you want to report this user for inappropriate behavior?',
+            confirmText: 'Report',
+            onConfirm: async () => {
+                try {
+                    await userApi.reportUser(id!);
+                    setMenuAnchor(null);
+                    showToast('User reported. Our team will review this.', 'info');
+                } catch (error) {
+                    console.error(error);
+                    showToast('Failed to report user', 'error');
+                }
+            },
+            onCancel: () => { }
+        });
     };
 
     if (loading) return <LoadingState type="skeleton-profile" />;

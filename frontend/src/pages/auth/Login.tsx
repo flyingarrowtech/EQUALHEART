@@ -25,10 +25,12 @@ import {
 } from '@mui/icons-material';
 import api from '../../hooks/api';
 import { useAuthStore } from '../../store/useAuthStore';
+import { useNotificationStore } from '../../store/useNotificationStore';
 
 const Login: React.FC = () => {
     const navigate = useNavigate();
     const { setAuth } = useAuthStore();
+    const { showToast } = useNotificationStore();
 
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -45,16 +47,29 @@ const Login: React.FC = () => {
             const response = await api.post('/auth/login', { email, password });
             const { user, accessToken } = response.data.data;
             setAuth(user, accessToken);
+            showToast('Welcome back! Login successful.', 'success');
             navigate('/dashboard');
         } catch (err: any) {
-            setError(err.response?.data?.message || 'Login failed. Please check your credentials.');
+            const msg = err.response?.data?.message || 'Login failed. Please check your credentials.';
+            setError(msg);
+            showToast(msg, 'error');
         } finally {
             setLoading(false);
         }
     };
 
-    const handleSocialLogin = (provider: 'google' | 'facebook') => {
-        window.location.href = `${import.meta.env.VITE_API_URL}/auth/${provider}`;
+    const handleSocialLogin = async (provider: 'google' | 'facebook') => {
+        if (provider === 'google') {
+            try {
+                const response = await api.get('/auth/google/url');
+                window.location.href = response.data.url;
+            } catch (err) {
+                setError('Failed to initialize Google login');
+            }
+        } else {
+            // Facebook still uses the old link for now or we could implement it manually too
+            window.location.href = `${import.meta.env.VITE_API_URL}/auth/${provider}`;
+        }
     };
 
     return (
@@ -67,8 +82,11 @@ const Login: React.FC = () => {
                 borderRadius: 4,
                 position: 'relative',
                 zIndex: 1,
-                backdropFilter: 'blur(10px)',
-                background: 'rgba(255, 255, 255, 0.98)',
+                backdropFilter: 'blur(20px)',
+                bgcolor: 'background.glassCard', // Strict Token
+                border: 1,
+                borderColor: 'background.glassBorder', // Strict Token
+                boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.15)',
             }}
         >
             {/* Logo & Title */}
@@ -81,7 +99,7 @@ const Login: React.FC = () => {
                         width: 80,
                         height: 80,
                         borderRadius: '50%',
-                        background: 'linear-gradient(135deg, #e91e63 0%, #9c27b0 100%)',
+                        background: (theme) => `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`, // Strict Token
                         mb: 2,
                         boxShadow: '0 8px 24px rgba(233, 30, 99, 0.3)',
                     }}
@@ -120,7 +138,20 @@ const Login: React.FC = () => {
                             </InputAdornment>
                         ),
                     }}
-                    sx={{ mb: 2.5 }}
+                    sx={{
+                        mb: 2.5,
+                        '& .MuiOutlinedInput-root': {
+                            bgcolor: 'background.glassInput', // Strict Token
+                            backdropFilter: 'blur(5px)',
+                            transition: 'all 0.3s ease',
+                            '&:hover': {
+                                bgcolor: 'background.glassCard',
+                            },
+                            '&.Mui-focused': {
+                                bgcolor: 'background.paper',
+                            }
+                        }
+                    }}
                 />
 
                 <TextField
@@ -149,7 +180,20 @@ const Login: React.FC = () => {
                             </InputAdornment>
                         ),
                     }}
-                    sx={{ mb: 1.5 }}
+                    sx={{
+                        mb: 1.5,
+                        '& .MuiOutlinedInput-root': {
+                            bgcolor: 'background.glassInput', // Strict Token
+                            backdropFilter: 'blur(5px)',
+                            transition: 'all 0.3s ease',
+                            '&:hover': {
+                                bgcolor: 'background.glassCard',
+                            },
+                            '&.Mui-focused': {
+                                bgcolor: 'background.paper',
+                            }
+                        }
+                    }}
                 />
 
                 <Box sx={{ textAlign: 'right', mb: 3 }}>
@@ -157,7 +201,7 @@ const Login: React.FC = () => {
                         component={Link}
                         to="/auth/forgot-password"
                         sx={{
-                            color: '#e91e63',
+                            color: 'primary.main', // Strict Token
                             textDecoration: 'none',
                             fontWeight: 600,
                             fontSize: '0.875rem',
@@ -180,14 +224,14 @@ const Login: React.FC = () => {
                         borderRadius: 3,
                         fontWeight: 700,
                         fontSize: '1rem',
-                        background: 'linear-gradient(135deg, #e91e63 0%, #9c27b0 100%)',
+                        background: (theme) => `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`, // Strict Token
                         boxShadow: '0 4px 12px rgba(233, 30, 99, 0.3)',
                         '&:hover': {
-                            background: 'linear-gradient(135deg, #c2185b 0%, #7b1fa2 100%)',
+                            background: (theme) => `linear-gradient(135deg, ${theme.palette.primary.dark} 0%, ${theme.palette.secondary.dark} 100%)`,
                             boxShadow: '0 6px 16px rgba(233, 30, 99, 0.4)',
                         },
                         '&:disabled': {
-                            background: '#e0e0e0',
+                            background: 'action.disabledBackground',
                         },
                     }}
                 >
@@ -201,8 +245,6 @@ const Login: React.FC = () => {
                     OR
                 </Typography>
             </Divider>
-
-            {/* Social Login */}
             <Box sx={{ display: 'flex', gap: 2, mb: 3 }}>
                 <Button
                     fullWidth
@@ -213,12 +255,12 @@ const Login: React.FC = () => {
                     sx={{
                         py: 1.5,
                         borderRadius: 3,
-                        borderColor: '#e0e0e0',
+                        borderColor: 'divider',
                         color: 'text.primary',
                         fontWeight: 600,
                         '&:hover': {
-                            borderColor: '#e91e63',
-                            bgcolor: 'rgba(233, 30, 99, 0.05)',
+                            borderColor: 'primary.main',
+                            bgcolor: (theme) => `${theme.palette.primary.main}0D`, // 5% opacity
                         },
                     }}
                 >
@@ -229,16 +271,15 @@ const Login: React.FC = () => {
                     variant="outlined"
                     startIcon={<FacebookIcon />}
                     onClick={() => handleSocialLogin('facebook')}
-                    disabled={loading}
+                    disabled={true}
                     sx={{
                         py: 1.5,
                         borderRadius: 3,
-                        borderColor: '#e0e0e0',
-                        color: 'text.primary',
+                        borderColor: 'divider',
+                        color: 'text.disabled',
                         fontWeight: 600,
                         '&:hover': {
-                            borderColor: '#e91e63',
-                            bgcolor: 'rgba(233, 30, 99, 0.05)',
+                            borderColor: 'divider',
                         },
                     }}
                 >
@@ -254,7 +295,7 @@ const Login: React.FC = () => {
                         component={Link}
                         to="/register"
                         sx={{
-                            color: '#e91e63',
+                            color: 'primary.main', // Strict Token
                             fontWeight: 700,
                             textDecoration: 'none',
                             '&:hover': { textDecoration: 'underline' },

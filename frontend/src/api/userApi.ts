@@ -69,6 +69,7 @@ export interface ProfileUpdateData {
         horoscopeVisibility?: 'Public' | 'MembersOnly' | 'Request' | 'OnlyMe';
     };
     aboutMe?: string;
+    profileCompleted?: boolean | string;
 }
 
 export interface SearchFilters {

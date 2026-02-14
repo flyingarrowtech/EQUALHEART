@@ -17,16 +17,18 @@ import EmptyState from '../../components/common/EmptyState';
 import LoadingState from '../../components/common/LoadingState';
 import ErrorState from '../../components/common/ErrorState';
 import userApi from '../../api/userApi';
+import { useNotificationStore } from '../../store/useNotificationStore';
 
 const Interests: React.FC = () => {
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
     const [tabValue, setTabValue] = useState(0);
     const [receivedInterests, setReceivedInterests] = useState<any[]>([]);
     const [sentInterests, setSentInterests] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-    const theme = useTheme();
-    const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+    const { showToast, showConfirm } = useNotificationStore();
 
     const fetchInterests = async () => {
         setLoading(true);
@@ -40,7 +42,9 @@ const Interests: React.FC = () => {
             if (sentRes.success) setSentInterests(sentRes.data);
         } catch (err: any) {
             console.error('Failed to fetch interests', err);
-            setError('Failed to load interests. Please try again.');
+            const msg = 'Failed to load interests. Please try again.';
+            setError(msg);
+            showToast(msg, 'error');
         } finally {
             setLoading(false);
         }
@@ -57,22 +61,32 @@ const Interests: React.FC = () => {
     const handleAccept = async (interestId: string | number) => {
         try {
             await userApi.acceptInterest(String(interestId));
-            // Refresh list or remove item locally
+            showToast('Interest request accepted!', 'success');
             setReceivedInterests(prev => prev.filter(i => i._id !== interestId));
         } catch (err) {
             console.error(err);
-            alert('Failed to accept interest');
+            showToast('Failed to accept interest', 'error');
         }
     };
 
-    const handleReject = async (interestId: string | number) => {
-        try {
-            await userApi.rejectInterest(String(interestId));
-            setReceivedInterests(prev => prev.filter(i => i._id !== interestId));
-        } catch (err) {
-            console.error(err);
-            alert('Failed to reject interest');
-        }
+    const handleReject = (interestId: string | number) => {
+        showConfirm({
+            title: 'Reject Interest?',
+            message: 'Are you sure you want to reject this interest request? This action cannot be undone.',
+            confirmText: 'Reject',
+            cancelText: 'Keep',
+            onConfirm: async () => {
+                try {
+                    await userApi.rejectInterest(String(interestId));
+                    showToast('Interest request rejected', 'info');
+                    setReceivedInterests(prev => prev.filter(i => i._id !== interestId));
+                } catch (err) {
+                    console.error(err);
+                    showToast('Failed to reject interest', 'error');
+                }
+            },
+            onCancel: () => { }
+        });
     };
 
     return (
@@ -84,7 +98,7 @@ const Interests: React.FC = () => {
                 backgroundImage="https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?w=1920&q=80"
             />
 
-            <Container maxWidth="lg" sx={{ mt: -6 }}>
+            <Container maxWidth="lg" sx={{ mt: -6, position: 'relative', zIndex: 1 }}>
                 <Paper
                     elevation={0}
                     sx={{

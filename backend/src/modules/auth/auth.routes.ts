@@ -1,5 +1,4 @@
 import { Router } from 'express';
-import passport from 'passport';
 import { AuthController } from './auth.controller';
 import { validate } from '../../middleware/validate';
 import { registerSchema, loginSchema, verifyOtpSchema } from './auth.validation';
@@ -18,11 +17,8 @@ router.post('/refresh', AuthController.refresh); // Support both GET and POST fo
 router.post('/mobile-login', AuthController.loginWithMobile);
 router.post('/send-mobile-otp', AuthController.sendMobileOtp);
 
-// Social Auth Routes
-router.get('/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
-router.get('/google/callback', passport.authenticate('google', { failureRedirect: '/api/v1/auth/login' }), AuthController.socialLoginSuccess);
-
-router.get('/facebook', passport.authenticate('facebook', { scope: ['email'] }));
-router.get('/facebook/callback', passport.authenticate('facebook', { failureRedirect: '/api/v1/auth/login' }), AuthController.socialLoginSuccess);
+// Social Auth Routes (Manual)
+router.get('/google/url', AuthController.getGoogleAuthUrl);
+router.post('/google/callback', AuthController.handleGoogleCallback);
 
 export default router;

@@ -11,7 +11,7 @@ export class AdminService {
         // Count total matches (each match is counted twice, so divide by 2)
         const usersWithMatches = await User.find({ matches: { $exists: true, $ne: [] } });
         const totalMatches = usersWithMatches.reduce((sum, user) => {
-            const matchesCount = (user as any).matches?.length || 0;
+            const matchesCount = user.matches?.length || 0;
             return sum + matchesCount;
         }, 0) / 2;
 

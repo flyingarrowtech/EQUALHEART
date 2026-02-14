@@ -10,16 +10,73 @@ export class UserService {
         // Basic age calculation if DOB is updated
         if (updateData.dateOfBirth) {
             const dob = new Date(updateData.dateOfBirth);
-            const ageDifMs = Date.now() - dob.getTime();
-            const ageDate = new Date(ageDifMs);
-            updateData.age = Math.abs(ageDate.getUTCFullYear() - 1970);
+            if (!isNaN(dob.getTime())) {
+                const ageDifMs = Date.now() - dob.getTime();
+                const ageDate = new Date(ageDifMs);
+                updateData.age = Math.abs(ageDate.getUTCFullYear() - 1970);
+                console.log(`Calculated age for ${updateData.dateOfBirth}: ${updateData.age}`);
+            } else {
+                console.warn(`Invalid dateOfBirth received: ${updateData.dateOfBirth}`);
+                delete updateData.dateOfBirth;
+            }
         }
+
+        // Handle isDisabled and its related fields
+        const isDisabledVal = updateData.isDisabled as unknown;
+        if (isDisabledVal === false || isDisabledVal === 'false') {
+            updateData.isDisabled = false;
+            (updateData as any).disabilityType = null;
+            (updateData as any).disabilityDescription = null;
+        } else if (isDisabledVal === true || isDisabledVal === 'true') {
+            updateData.isDisabled = true;
+        }
+
+        // Handle profileCompleted flag
+        const profileCompletedVal = (updateData as any).profileCompleted;
+        if (profileCompletedVal === true || profileCompletedVal === 'true') {
+            updateData.profileCompleted = true;
+        }
+
+        // Clean up empty strings for fields that might have enums or should be null
+        const fieldsToClean = ['disabilityType', 'maritalStatus', 'gender', 'residentialType', 'familyType', 'familyValues', 'dietaryHabits', 'smoking', 'drinking'];
+        fieldsToClean.forEach(field => {
+            if ((updateData as any)[field] === '') {
+                delete (updateData as any)[field];
+            }
+        });
 
         // Prevent updating restricted fields
         const restrictedFields = ['_id', 'password', 'email', 'isVerified', 'role', 'kycStatus', 'createdAt', 'updatedAt', '__v', 'gamification'];
         restrictedFields.forEach(field => delete (updateData as any)[field]);
 
-        return await User.findByIdAndUpdate(userId, { $set: updateData }, { new: true, runValidators: true });
+        console.log('Final updateData for Mongoose:', JSON.stringify(updateData, null, 2));
+
+        const updatedUser = await User.findByIdAndUpdate(userId, { $set: updateData }, { new: true, runValidators: true });
+
+        // Auto-detect profile completion if not already marked
+        if (updatedUser && !updatedUser.profileCompleted) {
+            const hasRequiredFields =
+                updatedUser.fullName?.firstName &&
+                updatedUser.fullName?.lastName &&
+                updatedUser.gender &&
+                updatedUser.dateOfBirth &&
+                updatedUser.maritalStatus &&
+                updatedUser.religion &&
+                updatedUser.country &&
+                updatedUser.state &&
+                updatedUser.city &&
+                updatedUser.highestEducation &&
+                updatedUser.occupation &&
+                updatedUser.photos && updatedUser.photos.length > 0;
+
+            if (hasRequiredFields) {
+                console.log(`Auto-marking profile completion for user ${userId}`);
+                updatedUser.profileCompleted = true;
+                await updatedUser.save();
+            }
+        }
+
+        return updatedUser;
     }
 
     static async searchProfiles(filters: any, userTier: string = 'Basic'): Promise<IUser[]> {

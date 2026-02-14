@@ -6,11 +6,13 @@ import LoadingState from '../../components/common/LoadingState';
 import ErrorState from '../../components/common/ErrorState';
 import EmptyState from '../../components/common/EmptyState';
 import userApi from '../../api/userApi';
+import { useNotificationStore } from '../../store/useNotificationStore';
 
 const Shortlisted: React.FC = () => {
     const [profiles, setProfiles] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const { showToast } = useNotificationStore();
 
     const fetchShortlisted = async () => {
         setLoading(true);
@@ -22,7 +24,9 @@ const Shortlisted: React.FC = () => {
             }
         } catch (err) {
             console.error('Failed to fetch shortlisted users', err);
-            setError('Failed to load your shortlisted profiles.');
+            const msg = 'Failed to load your shortlisted profiles.';
+            setError(msg);
+            showToast(msg, 'error');
         } finally {
             setLoading(false);
         }

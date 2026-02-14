@@ -24,6 +24,8 @@ export class UserController {
             const user = (req as any).user as { userId: string } | undefined;
             if (!user?.userId) return res.status(401).json({ success: false, message: 'Unauthorized' });
 
+            console.log('Update Profile Request Body:', JSON.stringify(req.body, null, 2));
+
             const updatedProfile = await UserService.updateProfile(user.userId, req.body);
             res.status(200).json({
                 success: true,
@@ -31,6 +33,12 @@ export class UserController {
                 data: updatedProfile
             });
         } catch (error: any) {
+            console.error('Update Profile Error Details:', {
+                message: error.message,
+                stack: error.stack,
+                name: error.name,
+                errors: error.errors // Mongoose validation errors
+            });
             next(error);
         }
     }

@@ -29,6 +29,7 @@ import {
 import { motion } from 'framer-motion';
 import userApi from '../api/userApi';
 import PageHeader from '../components/common/PageHeader';
+import { useNotificationStore } from '../store/useNotificationStore';
 
 const tiers = [
     {
@@ -103,6 +104,7 @@ const tiers = [
 const Membership: React.FC = () => {
     const theme = useTheme();
     const [isYearly, setIsYearly] = useState(false);
+    const { showToast } = useNotificationStore();
 
     const handleUpgrade = async (tierName: string) => {
         try {
@@ -112,10 +114,10 @@ const Membership: React.FC = () => {
                 'test_payment',
                 `txn_${Date.now()}`
             );
-            alert(`Great choice! You are upgrading to ${tierName}. Redirecting to payment...`);
+            showToast(`Great choice! Upgrading to ${tierName}. Redirecting to payment...`, 'success');
         } catch (error) {
             console.error('Upgrade failed', error);
-            alert('Upgrade failed. Please try again.');
+            showToast('Upgrade failed. Please try again.', 'error');
         }
     };
 

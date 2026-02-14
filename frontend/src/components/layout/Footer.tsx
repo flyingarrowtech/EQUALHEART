@@ -1,5 +1,5 @@
-import React from 'react';
 import { Box, Typography, Container, Link, IconButton, Divider } from '@mui/material';
+import { Link as RouterLink } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import FacebookIcon from '@mui/icons-material/Facebook';
@@ -100,7 +100,8 @@ const Footer: React.FC = () => {
                         {footerLinks.company.map((link) => (
                             <Link
                                 key={link.label}
-                                href={link.href}
+                                component={RouterLink}
+                                to={link.href}
                                 color="text.secondary"
                                 underline="none"
                                 display="block"
@@ -127,7 +128,8 @@ const Footer: React.FC = () => {
                         {footerLinks.support.map((link) => (
                             <Link
                                 key={link.label}
-                                href={link.href}
+                                component={RouterLink}
+                                to={link.href}
                                 color="text.secondary"
                                 underline="none"
                                 display="block"
@@ -154,7 +156,8 @@ const Footer: React.FC = () => {
                         {footerLinks.legal.map((link) => (
                             <Link
                                 key={link.label}
-                                href={link.href}
+                                component={RouterLink}
+                                to={link.href}
                                 color="text.secondary"
                                 underline="none"
                                 display="block"

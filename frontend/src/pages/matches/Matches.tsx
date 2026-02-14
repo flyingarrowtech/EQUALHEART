@@ -6,11 +6,13 @@ import LoadingState from '../../components/common/LoadingState';
 import ErrorState from '../../components/common/ErrorState';
 import EmptyState from '../../components/common/EmptyState';
 import userApi from '../../api/userApi';
+import { useNotificationStore } from '../../store/useNotificationStore';
 
 const Matches: React.FC = () => {
     const [matches, setMatches] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const { showToast } = useNotificationStore();
 
     const fetchMatches = async () => {
         setLoading(true);
@@ -22,7 +24,9 @@ const Matches: React.FC = () => {
             }
         } catch (err) {
             console.error('Failed to fetch matches', err);
-            setError('Failed to load your matches. Please try again.');
+            const msg = 'Failed to load your matches. Please try again.';
+            setError(msg);
+            showToast(msg, 'error');
         } finally {
             setLoading(false);
         }

@@ -33,9 +33,14 @@ import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import api from '../../hooks/api';
+import { useAuthStore } from '../../store/useAuthStore';
+import { useNotificationStore } from '../../store/useNotificationStore';
 
 // Validation Schema
 const registerSchema = z.object({
+    profileCreatedFor: z.enum(['Self', 'Son', 'Daughter', 'Brother', 'Sister', 'Friend', 'Relative'], {
+        errorMap: () => ({ message: 'Please select who this profile is for' }),
+    }),
     firstName: z.string().min(2, 'First name is required'),
     lastName: z.string().min(2, 'Last name is required'),
     email: z.string().email('Invalid email address'),
@@ -58,6 +63,11 @@ const Register: React.FC = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState(false);
+    const [otp, setOtp] = useState('');
+    const [verifying, setVerifying] = useState(false);
+    const [userEmail, setUserEmail] = useState('');
+    const { setAuth } = useAuthStore();
+    const { showToast } = useNotificationStore();
 
     const {
         register,
@@ -67,6 +77,14 @@ const Register: React.FC = () => {
     } = useForm<RegisterFormValues>({
         resolver: zodResolver(registerSchema),
         defaultValues: {
+            profileCreatedFor: '' as any,
+            firstName: '',
+            lastName: '',
+            email: '',
+            password: '',
+            gender: '' as any,
+            dateOfBirth: '',
+            mobileNumber: '',
             termsAccepted: false,
         },
     });
@@ -77,6 +95,7 @@ const Register: React.FC = () => {
 
         try {
             const payload = {
+                profileCreatedFor: data.profileCreatedFor,
                 email: data.email,
                 password: data.password,
                 fullName: {
@@ -89,11 +108,59 @@ const Register: React.FC = () => {
             };
 
             await api.post('/auth/register', payload);
+            setUserEmail(data.email);
             setSuccess(true);
+            showToast('Account created! Please verify your email.', 'success');
         } catch (err: any) {
-            setError(err.response?.data?.message || 'Registration failed. Please try again.');
+            const msg = err.response?.data?.message || 'Registration failed. Please try again.';
+            setError(msg);
+            showToast(msg, 'error');
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleVerifyOtp = async () => {
+        if (!otp || otp.length < 6) {
+            const msg = 'Please enter a valid 6-digit OTP';
+            setError(msg);
+            showToast(msg, 'warning');
+            return;
+        }
+
+        setError(null);
+        setVerifying(true);
+        try {
+            const response = await api.post('/auth/verify-otp', { email: userEmail, otp });
+            const { user, accessToken } = response.data.data;
+            setAuth(user, accessToken);
+            showToast('Email verified! Welcome to EqualHeart.', 'success');
+            navigate('/dashboard');
+        } catch (err: any) {
+            const msg = err.response?.data?.message || 'OTP verification failed';
+            setError(msg);
+            showToast(msg, 'error');
+        } finally {
+            setVerifying(false);
+        }
+    };
+
+    const handleResendOtp = async () => {
+        try {
+            await api.post('/auth/resend-otp', { email: userEmail });
+            setError(null);
+            showToast('OTP resend to your email', 'info');
+        } catch (err: any) {
+            showToast('Failed to resend OTP', 'error');
+        }
+    };
+
+    const handleGoogleLogin = async () => {
+        try {
+            const response = await api.get('/auth/google/url');
+            window.location.href = response.data.url;
+        } catch (err) {
+            showToast('Failed to initialize Google login', 'error');
         }
     };
 
@@ -118,44 +185,68 @@ const Register: React.FC = () => {
                         p: 5,
                         textAlign: 'center',
                         borderRadius: 4,
-                        maxWidth: 500,
+                        maxWidth: 450,
                         width: '100%',
                     }}
                 >
-                    <Box
-                        sx={{
-                            width: 80,
-                            height: 80,
-                            borderRadius: '50%',
-                            bgcolor: '#e8f5e9',
-                            color: '#4caf50',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            margin: '0 auto 24px',
-                        }}
-                    >
-                        <PersonAdd sx={{ fontSize: 40 }} />
-                    </Box>
                     <Typography variant="h4" sx={{ fontWeight: 800, mb: 2 }}>
-                        Account Created!
+                        Verify Your Email
                     </Typography>
                     <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
-                        We've sent a verification email to your inbox. Please verify your email to activate your account.
+                        We've sent a 6-digit OTP to <b>{userEmail}</b>. Please enter it below to verify your account.
                     </Typography>
+
+                    {error && (
+                        <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>
+                    )}
+
+                    <TextField
+                        fullWidth
+                        label="Enter OTP"
+                        value={otp}
+                        onChange={(e) => setOtp(e.target.value)}
+                        placeholder="123456"
+                        inputProps={{ maxLength: 6, style: { textAlign: 'center', letterSpacing: '8px', fontSize: '1.5rem' } }}
+                        sx={{ mb: 3 }}
+                    />
+
                     <Button
                         variant="contained"
                         fullWidth
-                        onClick={() => navigate('/login')}
+                        onClick={handleVerifyOtp}
+                        disabled={verifying}
+                        startIcon={verifying ? <CircularProgress size={20} color="inherit" /> : null}
                         sx={{
                             py: 1.5,
                             borderRadius: 3,
                             background: 'linear-gradient(135deg, #e91e63 0%, #9c27b0 100%)',
                             fontWeight: 700,
+                            mb: 2
                         }}
                     >
-                        Continue to Login
+                        {verifying ? 'Verifying...' : 'Verify OTP'}
                     </Button>
+
+                    <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1 }}>
+                        <Typography variant="body2" color="text.secondary">
+                            Didn't receive code?
+                        </Typography>
+                        <MuiLink
+                            component="button"
+                            onClick={handleResendOtp}
+                            sx={{ color: '#e91e63', fontWeight: 600, border: 'none', background: 'none', cursor: 'pointer', p: 0 }}
+                        >
+                            Resend OTP
+                        </MuiLink>
+                    </Box>
+
+                    <MuiLink
+                        component="button"
+                        onClick={() => setSuccess(false)}
+                        sx={{ mt: 3, color: 'text.secondary', display: 'block', margin: '24px auto 0', border: 'none', background: 'none', cursor: 'pointer' }}
+                    >
+                        Change Email
+                    </MuiLink>
                 </Paper>
             </Box>
         );
@@ -175,29 +266,34 @@ const Register: React.FC = () => {
                 overflow: 'hidden',
                 display: 'flex',
                 flexDirection: { xs: 'column', md: 'row' },
-                backdropFilter: 'blur(10px)',
-                background: 'rgba(255, 255, 255, 0.98)',
+                backdropFilter: 'blur(20px)',
+                bgcolor: 'background.glassCard', // Strict Token
+                border: 1,
+                borderColor: 'background.glassBorder', // Strict Token
+                boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.15)',
             }}
         >
             {/* Left Side - Image/Branding */}
             <Box
                 sx={{
                     flex: { md: 1 },
-                    bgcolor: '#fce4ec',
+                    bgcolor: (theme) => `${theme.palette.primary.main}26`, // 15% opacity converted to hex alpha ~26
+                    backdropFilter: 'blur(10px)',
                     p: 5,
                     display: { xs: 'none', md: 'flex' },
                     flexDirection: 'column',
                     justifyContent: 'center',
-                    background: 'linear-gradient(135deg, #e91e63 0%, #9c27b0 100%)',
-                    color: 'white',
+                    color: 'primary.main', // Strict Token
                     position: 'relative',
                     overflow: 'hidden',
+                    borderRight: 1,
+                    borderColor: 'background.glassBorder' // Strict Token
                 }}
             >
                 <Box
                     component={motion.div}
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 100, repeat: Infinity, ease: 'linear' }}
+                    animate={{ rotate: 360, scale: [1, 1.1, 1] }}
+                    transition={{ duration: 40, repeat: Infinity, ease: 'linear' }}
                     sx={{
                         position: 'absolute',
                         top: -100,
@@ -205,13 +301,13 @@ const Register: React.FC = () => {
                         width: 400,
                         height: 400,
                         borderRadius: '50%',
-                        background: 'radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 60%)',
+                        background: (theme) => `radial-gradient(circle, ${theme.palette.primary.main}1A 0%, transparent 60%)`, // 10% opacity
                     }}
                 />
-                <Typography variant="h3" sx={{ fontWeight: 900, mb: 2 }}>
+                <Typography variant="h3" sx={{ fontWeight: 900, mb: 2, textShadow: '0 2px 10px rgba(255,255,255,0.8)' }}>
                     Join EqualHeart
                 </Typography>
-                <Typography variant="h6" sx={{ opacity: 0.9, lineHeight: 1.6 }}>
+                <Typography variant="h6" sx={{ opacity: 0.9, lineHeight: 1.6, fontWeight: 500 }}>
                     Start your journey to find your perfect life partner today.
                 </Typography>
             </Box>
@@ -246,6 +342,15 @@ const Register: React.FC = () => {
                                     </InputAdornment>
                                 ),
                             }}
+                            sx={{
+                                '& .MuiOutlinedInput-root': {
+                                    bgcolor: 'background.glassInput', // Strict Token
+                                    backdropFilter: 'blur(5px)',
+                                    transition: 'all 0.3s ease',
+                                    '&:hover': { bgcolor: 'background.glassCard' },
+                                    '&.Mui-focused': { bgcolor: 'background.paper' }
+                                }
+                            }}
                         />
                         <TextField
                             fullWidth
@@ -259,6 +364,15 @@ const Register: React.FC = () => {
                                         <Person sx={{ color: 'text.secondary' }} />
                                     </InputAdornment>
                                 ),
+                            }}
+                            sx={{
+                                '& .MuiOutlinedInput-root': {
+                                    bgcolor: 'background.glassInput', // Strict Token
+                                    backdropFilter: 'blur(5px)',
+                                    transition: 'all 0.3s ease',
+                                    '&:hover': { bgcolor: 'background.glassCard' },
+                                    '&.Mui-focused': { bgcolor: 'background.paper' }
+                                }
                             }}
                         />
 
@@ -277,28 +391,77 @@ const Register: React.FC = () => {
                                         </InputAdornment>
                                     ),
                                 }}
+                                sx={{
+                                    '& .MuiOutlinedInput-root': {
+                                        bgcolor: 'background.glassInput', // Strict Token
+                                        backdropFilter: 'blur(5px)',
+                                        transition: 'all 0.3s ease',
+                                        '&:hover': { bgcolor: 'background.glassCard' },
+                                        '&.Mui-focused': { bgcolor: 'background.paper' }
+                                    }
+                                }}
                             />
                         </Box>
 
-                        <TextField
-                            fullWidth
-                            select
-                            label="Gender"
-                            {...register('gender')}
-                            error={!!errors.gender}
-                            helperText={errors.gender?.message}
-                            InputProps={{
-                                startAdornment: (
-                                    <InputAdornment position="start">
-                                        <Person sx={{ color: 'text.secondary' }} />
-                                    </InputAdornment>
-                                ),
-                            }}
-                        >
-                            <MenuItem value="Male">Male</MenuItem>
-                            <MenuItem value="Female">Female</MenuItem>
-                            <MenuItem value="Transgender">Transgender</MenuItem>
-                        </TextField>
+                        <Box sx={{ gridColumn: '1 / -1', display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2 }}>
+                            <TextField
+                                fullWidth
+                                select
+                                label="Profile Created For"
+                                {...register('profileCreatedFor')}
+                                error={!!errors.profileCreatedFor}
+                                helperText={errors.profileCreatedFor?.message}
+                                InputProps={{
+                                    startAdornment: (
+                                        <InputAdornment position="start">
+                                            <Person sx={{ color: 'text.secondary' }} />
+                                        </InputAdornment>
+                                    ),
+                                }}
+                                sx={{
+                                    '& .MuiOutlinedInput-root': {
+                                        bgcolor: 'background.glassInput', // Strict Token
+                                        backdropFilter: 'blur(5px)',
+                                        transition: 'all 0.3s ease',
+                                        '&:hover': { bgcolor: 'background.glassCard' },
+                                        '&.Mui-focused': { bgcolor: 'background.paper' }
+                                    }
+                                }}
+                            >
+                                {['Self', 'Son', 'Daughter', 'Brother', 'Sister', 'Friend', 'Relative'].map((option) => (
+                                    <MenuItem key={option} value={option}>{option}</MenuItem>
+                                ))}
+                            </TextField>
+
+                            <TextField
+                                fullWidth
+                                select
+                                label="Gender"
+                                {...register('gender')}
+                                error={!!errors.gender}
+                                helperText={errors.gender?.message}
+                                InputProps={{
+                                    startAdornment: (
+                                        <InputAdornment position="start">
+                                            <Person sx={{ color: 'text.secondary' }} />
+                                        </InputAdornment>
+                                    ),
+                                }}
+                                sx={{
+                                    '& .MuiOutlinedInput-root': {
+                                        bgcolor: 'background.glassInput', // Strict Token
+                                        backdropFilter: 'blur(5px)',
+                                        transition: 'all 0.3s ease',
+                                        '&:hover': { bgcolor: 'background.glassCard' },
+                                        '&.Mui-focused': { bgcolor: 'background.paper' }
+                                    }
+                                }}
+                            >
+                                <MenuItem value="Male">Male</MenuItem>
+                                <MenuItem value="Female">Female</MenuItem>
+                                <MenuItem value="Transgender">Transgender</MenuItem>
+                            </TextField>
+                        </Box>
 
                         <TextField
                             fullWidth
@@ -315,6 +478,15 @@ const Register: React.FC = () => {
                                     </InputAdornment>
                                 ),
                             }}
+                            sx={{
+                                '& .MuiOutlinedInput-root': {
+                                    bgcolor: 'background.glassInput', // Strict Token
+                                    backdropFilter: 'blur(5px)',
+                                    transition: 'all 0.3s ease',
+                                    '&:hover': { bgcolor: 'background.glassCard' },
+                                    '&.Mui-focused': { bgcolor: 'background.paper' }
+                                }
+                            }}
                         />
 
                         <Box sx={{ gridColumn: '1 / -1' }}>
@@ -330,6 +502,15 @@ const Register: React.FC = () => {
                                             <Phone sx={{ color: 'text.secondary' }} />
                                         </InputAdornment>
                                     ),
+                                }}
+                                sx={{
+                                    '& .MuiOutlinedInput-root': {
+                                        bgcolor: 'background.glassInput', // Strict Token
+                                        backdropFilter: 'blur(5px)',
+                                        transition: 'all 0.3s ease',
+                                        '&:hover': { bgcolor: 'background.glassCard' },
+                                        '&.Mui-focused': { bgcolor: 'background.paper' }
+                                    }
                                 }}
                             />
                         </Box>
@@ -356,6 +537,15 @@ const Register: React.FC = () => {
                                         </InputAdornment>
                                     ),
                                 }}
+                                sx={{
+                                    '& .MuiOutlinedInput-root': {
+                                        bgcolor: 'background.glassInput', // Strict Token
+                                        backdropFilter: 'blur(5px)',
+                                        transition: 'all 0.3s ease',
+                                        '&:hover': { bgcolor: 'background.glassCard' },
+                                        '&.Mui-focused': { bgcolor: 'background.paper' }
+                                    }
+                                }}
                             />
                         </Box>
 
@@ -371,18 +561,18 @@ const Register: React.FC = () => {
                                                 checked={field.value}
                                                 sx={{
                                                     color: errors.termsAccepted ? 'error.main' : 'primary.main',
-                                                    '&.Mui-checked': { color: '#e91e63' },
+                                                    '&.Mui-checked': { color: 'primary.main' }, // Strict Token
                                                 }}
                                             />
                                         }
                                         label={
                                             <Typography variant="body2" color={errors.termsAccepted ? 'error' : 'textSecondary'}>
                                                 I accept the{' '}
-                                                <MuiLink component={Link} to="/terms" sx={{ color: '#e91e63' }}>
+                                                <MuiLink component={Link} to="/terms" sx={{ color: 'primary.main' }}>
                                                     Terms of Service
                                                 </MuiLink>{' '}
                                                 and{' '}
-                                                <MuiLink component={Link} to="/privacy" sx={{ color: '#e91e63' }}>
+                                                <MuiLink component={Link} to="/privacy" sx={{ color: 'primary.main' }}>
                                                     Privacy Policy
                                                 </MuiLink>
                                             </Typography>
@@ -406,10 +596,10 @@ const Register: React.FC = () => {
                             borderRadius: 3,
                             fontSize: '1rem',
                             fontWeight: 700,
-                            background: 'linear-gradient(135deg, #e91e63 0%, #9c27b0 100%)',
+                            background: (theme) => `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`, // Strict Token
                             boxShadow: '0 4px 12px rgba(233, 30, 99, 0.3)',
                             '&:hover': {
-                                background: 'linear-gradient(135deg, #c2185b 0%, #7b1fa2 100%)',
+                                background: (theme) => `linear-gradient(135deg, ${theme.palette.primary.dark} 0%, ${theme.palette.secondary.dark} 100%)`,
                                 boxShadow: '0 6px 16px rgba(233, 30, 99, 0.4)',
                             },
                         }}
@@ -429,13 +619,16 @@ const Register: React.FC = () => {
                         fullWidth
                         variant="outlined"
                         startIcon={<GoogleIcon />}
-                        onClick={() => (window.location.href = `${import.meta.env.VITE_API_URL}/auth/google`)}
+                        onClick={handleGoogleLogin}
                         sx={{
                             py: 1.5,
                             borderRadius: 2,
-                            borderColor: '#e0e0e0',
+                            borderColor: 'divider',
                             color: 'text.primary',
-                            '&:hover': { borderColor: '#e91e63', bgcolor: 'rgba(233, 30, 99, 0.05)' },
+                            '&:hover': {
+                                borderColor: 'primary.main',
+                                bgcolor: (theme) => `${theme.palette.primary.main}0D` // 5% opacity
+                            },
                         }}
                     >
                         Google
@@ -444,13 +637,13 @@ const Register: React.FC = () => {
                         fullWidth
                         variant="outlined"
                         startIcon={<FacebookIcon />}
-                        onClick={() => (window.location.href = `${import.meta.env.VITE_API_URL}/auth/facebook`)}
+                        disabled={true}
                         sx={{
                             py: 1.5,
                             borderRadius: 2,
-                            borderColor: '#e0e0e0',
-                            color: 'text.primary',
-                            '&:hover': { borderColor: '#e91e63', bgcolor: 'rgba(233, 30, 99, 0.05)' },
+                            borderColor: 'divider',
+                            color: 'text.disabled',
+                            '&:hover': { borderColor: 'divider' },
                         }}
                     >
                         Facebook
@@ -464,7 +657,7 @@ const Register: React.FC = () => {
                             component={Link}
                             to="/login"
                             sx={{
-                                color: '#e91e63',
+                                color: 'primary.main',
                                 fontWeight: 700,
                                 textDecoration: 'none',
                                 '&:hover': { textDecoration: 'underline' },

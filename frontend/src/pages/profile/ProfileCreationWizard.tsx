@@ -18,6 +18,7 @@ import {
     CheckCircle
 } from '@mui/icons-material';
 import PageHeader from '../../components/common/PageHeader';
+import { useAuthStore } from '../../store/useAuthStore';
 
 const DISABILITY_TYPES = [
     'None',
@@ -59,7 +60,7 @@ const profileWizardSchema = z.object({
     community: z.string().optional(),
     caste: z.string().optional(),
     gender: z.enum(['Male', 'Female', 'Transgender']),
-    isDisabled: z.union([z.boolean(), z.string().transform(v => v === 'true')]).optional(),
+    isDisabled: z.boolean().optional(),
     disabilityType: z.string().optional(),
     disabilityDescription: z.string().optional(),
 
@@ -122,7 +123,7 @@ const steps = [
 
 const Step1Basic = () => {
     const { register, formState: { errors }, watch } = useFormContext<ProfileWizardValues>();
-    const isDisabled = watch('isDisabled');
+    const isDisabled = watch('isDisabled') === true; // Boolean comparison
 
     return (
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
@@ -161,9 +162,9 @@ const Step1Basic = () => {
                     <TextField fullWidth label="Religion" {...register('religion')} error={!!errors.religion} helperText={errors.religion?.message} />
                 </Box>
                 <Box sx={{ flex: { xs: '1 1 100%', md: '1 1 calc(50% - 12px)' } }}>
-                    <TextField fullWidth select label="Any Disability?" {...register('isDisabled')} defaultValue="false">
-                        <MenuItem value="false">No</MenuItem>
-                        <MenuItem value="true">Yes</MenuItem>
+                    <TextField fullWidth select label="Any Disability?" {...register('isDisabled')}>
+                        <MenuItem value={false as any}>No</MenuItem>
+                        <MenuItem value={true as any}>Yes</MenuItem>
                     </TextField>
                 </Box>
                 <Box sx={{ flex: { xs: '1 1 100%', md: '1 1 calc(50% - 12px)' } }}>
@@ -374,6 +375,16 @@ const ProfileCreationWizard = () => {
                 // Pre-fill form
                 methods.reset({
                     ...data,
+                    maritalStatus: data.maritalStatus || '',
+                    gender: data.gender || '',
+                    residentialType: data.residentialType || '',
+                    familyType: data.familyType || '',
+                    familyValues: data.familyValues || '',
+                    dietaryHabits: data.dietaryHabits || '',
+                    smoking: data.smoking || '',
+                    drinking: data.drinking || '',
+                    isDisabled: !!data.isDisabled,
+                    disabilityType: data.disabilityType || '',
                     dateOfBirth: data.dateOfBirth ? new Date(data.dateOfBirth).toISOString().split('T')[0] : '',
                     hobbiesString: data.hobbies?.join(', ') || '',
                     interestsString: data.interests?.join(', ') || '', // Added interestsString
@@ -414,6 +425,13 @@ const ProfileCreationWizard = () => {
                     ...data,
                 };
 
+                if (payload.isDisabled !== undefined) {
+                    payload.isDisabled = !!payload.isDisabled;
+                }
+                if (payload.nriStatus !== undefined) {
+                    payload.nriStatus = payload.nriStatus === 'true';
+                }
+
                 if (payload.hobbiesString) {
                     payload.hobbies = payload.hobbiesString.split(',').map((s: string) => s.trim());
                     delete payload.hobbiesString;
@@ -436,15 +454,20 @@ const ProfileCreationWizard = () => {
                     payload.partnerPreferences.ageRange.max = Number(payload.partnerPreferences.ageRange.max);
                 }
 
-                await userApi.updateProfile(payload);
+                if (activeStep === steps.length - 1) {
+                    payload.profileCompleted = true;
+                }
+
+                const response = await userApi.updateProfile(payload);
+                if (activeStep === steps.length - 1) {
+                    const { setUser } = useAuthStore.getState();
+                    setUser(response.data.data);
+                    navigate('/dashboard');
+                } else {
+                    setActiveStep(prev => prev + 1);
+                }
             } catch (e) {
                 console.error("Auto-save failed", e);
-            }
-
-            if (activeStep === steps.length - 1) {
-                navigate('/dashboard');
-            } else {
-                setActiveStep(prev => prev + 1);
             }
         }
     };
@@ -466,7 +489,7 @@ const ProfileCreationWizard = () => {
                 backgroundImage="https://images.unsplash.com/photo-1522673607200-1645062cd958?w=1920&q=80"
             />
 
-            <Container maxWidth="md" sx={{ mt: -6 }}>
+            <Container maxWidth="md" sx={{ mt: -6, position: 'relative', zIndex: 1 }}>
                 <Paper elevation={0} sx={{
                     p: 4,
                     borderRadius: 4,

@@ -31,6 +31,7 @@ import ProfileCard from '../../components/common/ProfileCard';
 import EmptyState from '../../components/common/EmptyState';
 import LoadingState from '../../components/common/LoadingState';
 import userApi from '../../api/userApi';
+import { useNotificationStore } from '../../store/useNotificationStore';
 
 const DISABILITY_TYPES = [
     'None',
@@ -60,6 +61,7 @@ const DISABILITY_TYPES = [
 const Search: React.FC = () => {
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+    const { showToast } = useNotificationStore();
     const [mobileOpen, setMobileOpen] = useState(false);
     const [loading, setLoading] = useState(false);
     const [results, setResults] = useState<any[]>([]);
@@ -110,6 +112,7 @@ const Search: React.FC = () => {
             setResults(response.data || []);
         } catch (err) {
             console.error('Search failed', err);
+            showToast('Search failed. Please try again.', 'error');
             setResults([]);
         } finally {
             setLoading(false);

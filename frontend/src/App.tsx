@@ -9,37 +9,9 @@ import ProtectedRoute from './components/ProtectedRoute';
 import LoadingSpinner from './components/common/LoadingSpinner';
 import MainLayout from './components/layout/MainLayout';
 
-import HomePage from './pages/HomePage';
-import AuthPage from './pages/auth/AuthPage';
-import VerifyEmail from './pages/auth/VerifyEmail';
-import Dashboard from './pages/Dashboard';
-import ProfileEdit from './pages/profile/ProfileEdit';
-import Verification from './pages/profile/VerificationCenter';
-import PrivacySettings from './pages/profile/PrivacySettings';
-import PublicProfile from './pages/profile/PublicProfile';
-import Search from './pages/search/Search';
-import Matches from './pages/matches/Matches';
-import Shortlisted from './pages/matches/Shortlisted';
-import Visitors from './pages/matches/Visitors';
-import Interests from './pages/interests/Interests';
-import Messages from './pages/Messages';
-import Membership from './pages/Membership';
-import VirtualDate from './pages/VirtualDate';
-import AdminDashboard from './pages/admin/AdminDashboard';
-import AboutUs from './pages/static/AboutUs';
-import ContactUs from './pages/static/ContactUs';
-import PrivacyPolicy from './pages/static/PrivacyPolicy';
-import TermsAndConditions from './pages/static/TermsAndConditions';
-import HowItWorks from './pages/static/HowItWorks';
-import SuccessStories from './pages/static/SuccessStories';
-import Blog from './pages/static/Blog';
-import BlogPost from './pages/static/BlogPost';
-import HelpCenter from './pages/static/HelpCenter';
-import SafetyTips from './pages/static/SafetyTips';
-import FAQs from './pages/static/FAQs';
-import CookiePolicy from './pages/static/CookiePolicy';
-import RefundPolicy from './pages/static/RefundPolicy';
-import SocialSuccess from './pages/auth/SocialSuccess';
+import { Pages } from './routes/appRoutes';
+import NotificationContainer from './components/common/NotificationContainer';
+
 
 const App: React.FC = () => {
   const { isDarkMode } = useThemeStore();
@@ -47,7 +19,7 @@ const App: React.FC = () => {
 
   useEffect(() => {
     if (checkAuth) checkAuth();
-  }, [checkAuth]);
+  }, []); // Only run once on mount
 
   const theme = isDarkMode ? darkTheme : lightTheme;
 
@@ -55,57 +27,62 @@ const App: React.FC = () => {
     <Router>
       <ThemeProvider theme={theme}>
         <CssBaseline />
+        <NotificationContainer />
         <Suspense fallback={<LoadingSpinner fullScreen />}>
           <Routes>
             {/* Routes with MainLayout (Navbar + Footer) */}
             <Route element={<MainLayout />}>
-              <Route path="/" element={<HomePage />} />
+              <Route path="/" element={<Pages.HomePage.component />} />
 
               {/* Company Pages */}
-              <Route path="/about" element={<AboutUs />} />
-              <Route path="/how-it-works" element={<HowItWorks />} />
-              <Route path="/success-stories" element={<SuccessStories />} />
-              <Route path="/blog" element={<Blog />} />
-              <Route path="/blog/:slug" element={<BlogPost />} />
+              <Route path="/about" element={<Pages.AboutUs.component />} />
+              <Route path="/how-it-works" element={<Pages.HowItWorks.component />} />
+              <Route path="/success-stories" element={<Pages.SuccessStories.component />} />
+              <Route path="/blog" element={<Pages.Blog.component />} />
+              <Route path="/blog/:slug" element={<Pages.BlogPost.component />} />
 
               {/* Support Pages */}
-              <Route path="/contact" element={<ContactUs />} />
-              <Route path="/help" element={<HelpCenter />} />
-              <Route path="/safety" element={<SafetyTips />} />
-              <Route path="/faq" element={<FAQs />} />
+              <Route path="/contact" element={<Pages.ContactUs.component />} />
+              <Route path="/help" element={<Pages.HelpCenter.component />} />
+              <Route path="/safety" element={<Pages.SafetyTips.component />} />
+              <Route path="/faq" element={<Pages.FAQs.component />} />
 
               {/* Legal Pages */}
-              <Route path="/privacy" element={<PrivacyPolicy />} />
-              <Route path="/terms" element={<TermsAndConditions />} />
-              <Route path="/cookies" element={<CookiePolicy />} />
-              <Route path="/refund" element={<RefundPolicy />} />
+              <Route path="/privacy" element={<Pages.PrivacyPolicy.component />} />
+              <Route path="/terms" element={<Pages.TermsAndConditions.component />} />
+              <Route path="/cookies" element={<Pages.CookiePolicy.component />} />
+              <Route path="/refund" element={<Pages.RefundPolicy.component />} />
 
               {/* Protected Routes */}
               <Route element={<ProtectedRoute />}>
-                <Route path="/dashboard" element={<Dashboard />} />
-                <Route path="/admin/dashboard" element={<AdminDashboard />} />
-                <Route path="/profile" element={<ProfileEdit />} />
-                <Route path="/profile/verify" element={<Verification />} />
-                <Route path="/profile/privacy" element={<PrivacySettings />} />
-                <Route path="/profile/preferences" element={<ProfileEdit />} />
-                <Route path="/profile/:id" element={<PublicProfile />} />
-                <Route path="/search" element={<Search />} />
-                <Route path="/matches" element={<Matches />} />
-                <Route path="/shortlisted" element={<Shortlisted />} />
-                <Route path="/visitors" element={<Visitors />} />
-                <Route path="/interests" element={<Interests />} />
-                <Route path="/messages" element={<Messages />} />
-                <Route path="/chat" element={<Messages />} />
-                <Route path="/membership" element={<Membership />} />
-                <Route path="/date/:id" element={<VirtualDate />} />
+                <Route path="/dashboard" element={<Pages.Dashboard.component />} />
+                <Route path="/admin/dashboard" element={<Pages.AdminDashboard.component />} />
+                <Route path="/profile" element={<Pages.ProfileEdit.component />} />
+                <Route path="/profile/edit" element={<Pages.ProfileEdit.component />} />
+                <Route path="/profile/photos" element={<Pages.ProfileEdit.component />} />
+                <Route path="/profile/verify" element={<Pages.Verification.component />} />
+                <Route path="/profile/privacy" element={<Pages.PrivacySettings.component />} />
+                <Route path="/profile/preferences" element={<Pages.ProfileEdit.component />} />
+                <Route path="/profile/:id" element={<Pages.PublicProfile.component />} />
+                <Route path="/search" element={<Pages.Search.component />} />
+                <Route path="/matches" element={<Pages.Matches.component />} />
+                <Route path="/shortlisted" element={<Pages.Shortlisted.component />} />
+                <Route path="/visitors" element={<Pages.Visitors.component />} />
+                <Route path="/interests" element={<Pages.Interests.component />} />
+                <Route path="/messages" element={<Pages.Messages.component />} />
+                <Route path="/chat" element={<Pages.Messages.component />} />
+                <Route path="/membership" element={<Pages.Membership.component />} />
+                <Route path="/date/:id" element={<Pages.VirtualDate.component />} />
               </Route>
             </Route>
 
             {/* Standalone routes without MainLayout */}
-            <Route path="/register" element={<AuthPage />} />
-            <Route path="/login" element={<AuthPage />} />
-            <Route path="/verify-email" element={<VerifyEmail />} />
-            <Route path="/auth/social/success" element={<SocialSuccess />} />
+            <Route path="/register" element={<Pages.AuthPage.component />} />
+            <Route path="/login" element={<Pages.AuthPage.component />} />
+            <Route path="/verify-email" element={<Pages.VerifyEmail.component />} />
+            <Route path="/auth/social/success" element={<Pages.SocialSuccess.component />} />
+            <Route path="/auth/google/callback" element={<Pages.GoogleCallback.component />} />
+
           </Routes>
         </Suspense>
       </ThemeProvider>

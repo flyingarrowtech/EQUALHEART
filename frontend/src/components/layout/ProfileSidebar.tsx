@@ -33,10 +33,15 @@ interface ProfileSidebarProps {
 
 const ProfileSidebar: React.FC<ProfileSidebarProps> = ({ open, onClose }) => {
     const navigate = useNavigate();
-    const { logout } = useAuthStore();
+    const { logout, user } = useAuthStore();
 
     const handleNavigation = (path: string) => {
-        navigate(path);
+        // If path is generic /profile and we have a user, properly route to public profile
+        if (path === '/profile' && user) {
+            navigate(`/profile/${user.id || (user as any)._id}`);
+        } else {
+            navigate(path);
+        }
         onClose();
     };
 
@@ -169,6 +174,11 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({ open, onClose }) => {
                 <List dense>
                     <ListItem disablePadding>
                         <ListItemButton onClick={() => handleNavigation('/profile')}>
+                            <ListItemText primary="View Profile" secondary="See how others view your profile" />
+                        </ListItemButton>
+                    </ListItem>
+                    <ListItem disablePadding>
+                        <ListItemButton onClick={() => handleNavigation('/profile/edit')}>
                             <ListItemText primary="Edit Profile" secondary="Update your information" />
                         </ListItemButton>
                     </ListItem>
